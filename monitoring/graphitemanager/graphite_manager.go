@@ -145,7 +145,6 @@ func Matches(key string, keys []string) bool {
 
 func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}, error) {
 	var resource string
-	var data []interface{}
 	if str, ok := params["resource"].(string); ok {
 		resource = str
 	}
