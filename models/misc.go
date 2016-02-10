@@ -99,6 +99,15 @@ type Event struct {
 	Severity  string            `json:"severity"`
 }
 
+type MailNotifier struct {
+	MailId     string `json:"mailid"`
+	Passcode   string `json:"passcode"`
+	SmtpServer string `json:"smtpserver"`
+	Port       int    `json:"port"`
+	Encryption string `json:"encryption"`
+	SkipVerify bool   `json:"skipverify"`
+}
+
 type QueryOps struct {
 	Sort     bool
 	Batch    int
@@ -124,6 +133,7 @@ const (
 	COLL_NAME_SESSION_STORE         = "skyring_session_store"
 	COLL_NAME_USER                  = "skyringusers"
 	COLL_NAME_STORAGE_PROFILE       = "storage_profile"
+	COLL_NAME_MAIL_NOTIFIER         = "mailnotifier"
 
 	TASKS_PER_PAGE = 100
 )
