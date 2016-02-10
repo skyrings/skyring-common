@@ -152,12 +152,24 @@ var ClusterStatuses = [...]string{
 	"unknown",
 }
 
+type ClusterState int
+
 // State values for cluster
 const (
-	CLUSTER_STATE_CREATING = "creating"
-	CLUSTER_STATE_FAILED   = "failed"
-	CLUSTER_STATE_CREATED  = "created"
+	CLUSTER_STATE_CREATING = iota
+	CLUSTER_STATE_FAILED
+	CLUSTER_STATE_ACTIVE
+	CLUSTER_STATE_UNMANAGED
 )
+
+var ClusterStates = [...]string{
+	"creating",
+	"failed",
+	"active",
+	"unmanaged",
+}
+
+func (s ClusterState) String() string { return ClusterStates[s] }
 
 // Storage logical unit types
 const (

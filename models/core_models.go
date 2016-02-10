@@ -111,9 +111,9 @@ type Cluster struct {
 	Options            map[string]string `json:"options"`
 	OpenStackServices  []string          `json:"openstack_services"`
 	Networks           ClusterNetworks   `json:"networks"`
-	Enabled            bool              `json:"enabled"`
 	Monitoring         MonitoringState   `json:"monitoring"`
 	MonitoringInterval int               `json:"monitoringinterval"`
+	State              int               `json:"state"`
 }
 
 type MonitoringState struct {
