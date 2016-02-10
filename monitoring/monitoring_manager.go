@@ -15,6 +15,8 @@ var GeneralResources = []string{
 	"memory",
 	"cpu",
 	CLUSTER_UTILIZATION,
+	STORAGE_PROFILE_UTILIZATION,
+	SLU_UTILIZATION,
 }
 
 var (

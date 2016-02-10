@@ -37,6 +37,7 @@ var (
 	templateUrl             = "http://{{.hostname}}:{{.port}}/render?target={{.target}}&format=json"
 	targetLatest            = "cactiStyle({{.targetGeneral}})"
 	targetGeneral           = "{{.collectionname}}.{{.nodename}}.{{.resourcename}}"
+	targetWithParent        = "{{.collectionname}}.{{.parentname}}.{{.resourcename}}_{{.nodename}}"
 	targetWildCard          = "*.*"
 	templateFromTime        = "&from={{.start_time}}"
 	templateUntilTime       = "&until={{.end_time}}"
@@ -59,6 +60,8 @@ type GraphiteMetric struct {
 
 type stat []interface{}
 type stats []stat
+
+var nodeNameExceptions = map[string]string{}
 
 func (slice stats) Len() int {
 	return len(slice)
@@ -105,11 +108,17 @@ func getUrlBaseTemplateParams(params map[string]interface{}) (map[string]interfa
 		return nil, nodeNameError
 	}
 	nodename = strings.Replace(nodename, ".", "_", -1)
-	target, targetErr := GetTemplateParsedString(map[string]interface{}{
+	templateString := targetGeneral
+	templateParams := map[string]interface{}{
 		"collectionname": conf.SystemConfig.TimeSeriesDBConfig.CollectionName,
 		"nodename":       nodename,
 		"resourcename":   params["resource"],
-	}, targetGeneral)
+	}
+	if parentName, ok := params["parentName"]; ok {
+		templateParams["parentname"] = parentName
+		templateString = targetWithParent
+	}
+	target, targetErr := GetTemplateParsedString(templateParams, templateString)
 	if targetErr != nil {
 		return nil, targetErr
 	}

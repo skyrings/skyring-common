@@ -18,11 +18,17 @@ type PluginConfig struct {
 }
 
 const (
-	CLUSTER_UTILIZATION = "cluster_utilization"
-	SLU_UTILIZATION     = "slu_utilization"
-	FREE_SPACE          = "free_bytes"
-	USED_SPACE          = "used_bytes"
-	PERCENT_USED        = "percent_bytes"
+	CLUSTER_UTILIZATION         = "cluster_utilization"
+	SLU_UTILIZATION             = "slu_utilization"
+	FREE_SPACE                  = "free_bytes"
+	USED_SPACE                  = "used_bytes"
+	TOTAL_SPACE                 = "total_bytes"
+	PERCENT_USED                = "percent_bytes"
+	STORAGE_PROFILE_UTILIZATION = "storage_profile_utilization"
+	USAGE_PERCENT               = "usage_percent"
+	SLU                         = "slu"
+	CLUSTER                     = "cluster"
+	NODE                        = "node"
 )
 
 var (
