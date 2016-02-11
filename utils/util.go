@@ -3,7 +3,6 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
@@ -15,10 +14,6 @@ import (
 	"strings"
 	"time"
 )
-
-type APIError struct {
-	Error string
-}
 
 // For testing, bypass HandleCrash.
 var ReallyCrash bool
@@ -72,21 +67,6 @@ func logPanic(r interface{}) {
 		callers = callers + fmt.Sprintf("%v:%v\n", file, line)
 	}
 	logger.Get().Error("Recovered from panic: %#v (%v)\n%v", r, r, callers)
-}
-
-func HandleHttpError(rw http.ResponseWriter, err error) {
-	bytes, _ := json.Marshal(APIError{Error: err.Error()})
-	rw.WriteHeader(http.StatusInternalServerError)
-	rw.Write(bytes)
-}
-
-func HttpResponse(w http.ResponseWriter, status_code int, msg string) {
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(status_code)
-	if err := json.NewEncoder(w).Encode(msg); err != nil {
-		logger.Get().Error("Error: %v", err)
-	}
-	return
 }
 
 func FailTask(msg string, err error, t *task.Task) {

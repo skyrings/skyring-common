@@ -13,8 +13,9 @@ limitations under the License.
 package models
 
 type RpcRequest struct {
-	RpcRequestVars map[string]string `json:"rpcrequestvars"`
-	RpcRequestData []byte            `json:"rpcrequestdata"`
+	RpcRequestVars    map[string]string `json:"rpcrequestvars"`
+	RpcRequestData    []byte            `json:"rpcrequestdata"`
+	RpcRequestContext string            `json:"rpcrequestcontext"`
 }
 
 type RpcResponse struct {
