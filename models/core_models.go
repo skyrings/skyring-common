@@ -195,3 +195,23 @@ type StorageProfile struct {
 	Priority int         `json:"priority"`
 	Default  bool        `json:"default"`
 }
+
+type ExternalUsers struct {
+        Users       []User
+        TotalCount  int
+        StartIndex  int
+        EndIndex    int
+}
+
+type Directory struct {
+	LdapServer  string
+	Port        uint
+	Base        string
+	DomainAdmin string
+	Password    string
+	Uid         string
+	FirstName   string
+	LastName    string
+	DisplayName string
+	Email       string
+}

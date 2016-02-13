@@ -134,8 +134,10 @@ const (
 	COLL_NAME_USER                  = "skyringusers"
 	COLL_NAME_STORAGE_PROFILE       = "storage_profile"
 	COLL_NAME_MAIL_NOTIFIER         = "mailnotifier"
+	COLL_NAME_LDAP                  = "ldap"
 
 	TASKS_PER_PAGE = 100
+	LDAP_USERS_PER_PAGE = 100
 )
 
 type Clusters []Cluster
