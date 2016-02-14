@@ -47,6 +47,9 @@ var (
 		"df",
 		"memory",
 		"cpu",
+		"disk",
+		"network",
+		"swap",
 	}
 
 	MonitoringWritePlugin = "dbpush"

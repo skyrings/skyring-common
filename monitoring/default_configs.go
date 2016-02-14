@@ -23,6 +23,13 @@ func GetDefaultThresholdValues() (plugins []Plugin) {
 				{Category: "threshold", Type: "critical", Value: "70"},
 			},
 		},
+		{
+			Name:   "swap",
+			Enable: true,
+			Configs: []PluginConfig{
+				{Category: "threshold", Type: "critical", Value: "70"},
+			},
+		},
 	}
 }
 
