@@ -111,9 +111,10 @@ type QueryOps struct {
 }
 
 const (
-	DEFAULT_SSH_PORT                = 22
-	DEFAULT_FS_TYPE                 = "xfs"
-	REQUEST_SIZE_LIMIT              = 1048576
+	DEFAULT_SSH_PORT   = 22
+	DEFAULT_FS_TYPE    = "xfs"
+	REQUEST_SIZE_LIMIT = 1048576
+
 	COLL_NAME_STORAGE               = "storage"
 	COLL_NAME_NODE_EVENTS           = "node_events"
 	COLL_NAME_STORAGE_NODES         = "storage_nodes"
@@ -123,6 +124,8 @@ const (
 	COLL_NAME_SESSION_STORE         = "skyring_session_store"
 	COLL_NAME_USER                  = "skyringusers"
 	COLL_NAME_STORAGE_PROFILE       = "storage_profile"
+
+	TASKS_PER_PAGE = 100
 )
 
 type Clusters []Cluster
