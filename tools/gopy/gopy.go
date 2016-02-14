@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sbinet/go-python"
+	"os"
 	"reflect"
 )
 
@@ -34,6 +35,7 @@ var pyinit = false
 func Init() (err error) {
 	if !pyinit {
 		if err = python.Initialize(); err == nil {
+			python.PySys_SetArgv(os.Args)
 			pyinit = true
 		}
 	}
