@@ -20,6 +20,7 @@ var GeneralResources = []string{
 	CLUSTER_UTILIZATION,
 	STORAGE_PROFILE_UTILIZATION,
 	SLU_UTILIZATION,
+	NO_OF_OBJECT,
 }
 
 var (

@@ -29,6 +29,7 @@ const (
 	SLU                         = "slu"
 	CLUSTER                     = "cluster"
 	NODE                        = "node"
+	NO_OF_OBJECT                = "no_of_object"
 )
 
 var (
