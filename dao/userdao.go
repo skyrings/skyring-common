@@ -18,7 +18,7 @@ import (
 
 type UserInterface interface {
 	User(username string) (user models.User, e error)
-	Users() (users []models.User, e error)
+	Users(query interface{}) (users []models.User, e error)
 	SaveUser(u models.User) error
 	DeleteUser(username string) error
 	InitUser() error

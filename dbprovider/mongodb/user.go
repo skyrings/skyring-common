@@ -37,11 +37,11 @@ func (m MongoDb) User(username string) (user models.User, e error) {
 }
 
 // Users returns a slice of all users.
-func (m MongoDb) Users() (us []models.User, e error) {
+func (m MongoDb) Users(filter interface{}) (us []models.User, e error) {
 	c := m.Connect(models.COLL_NAME_USER)
 	defer m.Close(c)
 
-	err := c.Find(bson.M{}).All(&us)
+	err := c.Find(filter).All(&us)
 	if err != nil {
 		logger.Get().Error("Error getting record from DB. error: %v", err)
 		return us, mkmgoerror(err.Error())

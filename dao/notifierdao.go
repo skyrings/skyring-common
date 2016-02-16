@@ -10,19 +10,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package dbprovider
+package dao
 
 import (
-	"github.com/skyrings/skyring-common/dao"
-	"gopkg.in/mgo.v2"
+	"github.com/skyrings/skyring-common/models"
 )
 
-type DbInterface interface {
-	Close(c *mgo.Collection)
-	Connect(document string) *mgo.Collection
-	InitDb() error
-
-	MailNotifierInterface() dao.MailNotifierInterface
-	StorageProfileInterface() dao.StorageProfileInterface
-	UserInterface() dao.UserInterface
+type MailNotifierInterface interface {
+	MailNotifier() (models.MailNotifier, error)
+	SaveMailNotifier(notifier models.MailNotifier) error
 }

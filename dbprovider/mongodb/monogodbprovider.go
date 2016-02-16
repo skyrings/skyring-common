@@ -89,3 +89,7 @@ func (m MongoDb) UserInterface() dao.UserInterface {
 func (m MongoDb) StorageProfileInterface() dao.StorageProfileInterface {
 	return m
 }
+
+func (m MongoDb) MailNotifierInterface() dao.MailNotifierInterface {
+	return m
+}

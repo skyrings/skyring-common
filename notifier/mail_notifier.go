@@ -18,8 +18,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/skyrings/skyring-common/conf"
-	"github.com/skyrings/skyring-common/db"
+	"github.com/skyrings/skyring-common/dbprovider"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
 	"gopkg.in/mgo.v2/bson"
@@ -109,27 +108,23 @@ func sendMail(from string, to []string, msg []byte) error {
 	return nil
 }
 
-func getNotifier() (models.MailNotifier, error) {
-	sessionCopy := db.GetDatastore().Copy()
-	defer sessionCopy.Close()
-	collection := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_MAIL_NOTIFIER)
-	var notifier []models.MailNotifier
-	if err := collection.Find(nil).All(&notifier); err != nil || len(notifier) == 0 {
+func getNotifier(dbProvider dbprovider.DbInterface) (models.MailNotifier, error) {
+	var notifier models.MailNotifier
+	notifier, err := dbProvider.MailNotifierInterface().MailNotifier()
+	if err != nil {
 		logger.Get().Warning("Unable to read MailNotifier from DB: %v", err)
-		return notifier[0], err
+		return notifier, err
 	} else {
-		return notifier[0], nil
+		return notifier, nil
 	}
 }
 
-func getMailRecepients() ([]string, error) {
-	sessionCopy := db.GetDatastore().Copy()
-	defer sessionCopy.Close()
-	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_USER)
+func getMailRecepients(dbProvider dbprovider.DbInterface) ([]string, error) {
 	var users []models.User
 	var recepients []string
-	if err := coll.Find(bson.M{"notificationenabled": true}).All(&users); err != nil {
-		logger.Get().Critical("Could not retrieve the list of users from DB. Error: %v", err)
+	users, err := dbProvider.UserInterface().Users(bson.M{"notificationenabled": true})
+	if err != nil {
+		logger.Get().Critical(fmt.Sprintf("Could not retrieve the list of users from DB. Error: %v", err))
 		return recepients, err
 	}
 	for _, user := range users {
@@ -154,14 +149,14 @@ func SetMailClient(notifier models.MailNotifier) error {
 	return nil
 }
 
-func MailNotify(subject string, body string) error {
-	notifier, err := getNotifier()
+func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) error {
+	notifier, err := getNotifier(dbProvider)
 	if err != nil {
 		logger.Get().Warning("Could not Get the notifier. Error: %v", err)
 		return errors.New(fmt.Sprintf("Could not Get the notifier. Error: %v", err))
 	}
 
-	recepients, err := getMailRecepients()
+	recepients, err := getMailRecepients(dbProvider)
 	if err != nil || len(recepients) == 0 {
 		logger.Get().Warning("Could not Get any recepients. Error: %v", err)
 		return errors.New(fmt.Sprintf("Could not Get any recepients. Error: %v", err))
@@ -179,14 +174,18 @@ func MailNotify(subject string, body string) error {
 		body + "\r\n")
 	if client == nil {
 		err := SetMailClient(notifier)
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	err = sendMail(notifier.MailId, recepients, msg)
 	if err != nil {
 		// retry once again after setting the client, as client might have timed out
 		if err := SetMailClient(notifier); err != nil {
-			return err
+			if err != nil {
+				return err
+			}
 		}
 		if err = sendMail(notifier.MailId, recepients, msg); err != nil {
 			logger.Get().Error("Could not Send the Mail Notification. Error: %v", err)
