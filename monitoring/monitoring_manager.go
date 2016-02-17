@@ -21,6 +21,7 @@ var GeneralResources = []string{
 	STORAGE_PROFILE_UTILIZATION,
 	SLU_UTILIZATION,
 	NO_OF_OBJECT,
+	PG_SUMMARY,
 }
 
 var (
