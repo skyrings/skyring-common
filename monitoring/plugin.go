@@ -27,10 +27,12 @@ const (
 	STORAGE_PROFILE_UTILIZATION = "storage_profile_utilization"
 	USAGE_PERCENT               = "usage_percent"
 	SLU                         = "slu"
-	CLUSTER                     = "cluster"
+	SYSTEM                      = "system"
+	STORAGE_PROFILE             = "storage_profile"
 	NODE                        = "node"
 	NO_OF_OBJECT                = "no_of_object"
 	PG_SUMMARY                  = "pg_summary"
+	Latest                      = "latest"
 )
 
 var (

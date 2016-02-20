@@ -104,21 +104,39 @@ type User struct {
 }
 
 type Cluster struct {
-	ClusterId          uuid.UUID         `json:"clusterid"`
-	Name               string            `json:"name"`
-	CompatVersion      string            `json:"compat_version"`
-	Type               string            `json:"type"`
-	WorkLoad           string            `json:"workload"`
-	Status             ClusterStatus     `json:"status"`
-	Tags               []string          `json:"tags"`
-	Options            map[string]string `json:"options"`
-	OpenStackServices  []string          `json:"openstack_services"`
-	Networks           ClusterNetworks   `json:"networks"`
-	Monitoring         MonitoringState   `json:"monitoring"`
-	MonitoringInterval int               `json:"monitoringinterval"`
-	State              ClusterState      `json:"state"`
-	AlmStatus          AlarmStatus       `json:"almstatus"`
-	AlmCount           int               `json:"almcount"`
+	ClusterId           uuid.UUID              `json:"clusterid"`
+	Name                string                 `json:"name"`
+	CompatVersion       string                 `json:"compat_version"`
+	Type                string                 `json:"type"`
+	WorkLoad            string                 `json:"workload"`
+	Status              ClusterStatus          `json:"status"`
+	Tags                []string               `json:"tags"`
+	Options             map[string]string      `json:"options"`
+	OpenStackServices   []string               `json:"openstack_services"`
+	Networks            ClusterNetworks        `json:"networks"`
+	Monitoring          MonitoringState        `json:"monitoring"`
+	MonitoringInterval  int                    `json:"monitoringinterval"`
+	State               ClusterState           `json:"state"`
+	AlmStatus           AlarmStatus            `json:"almstatus"`
+	AlmCount            int                    `json:"almcount"`
+	Usage               Utilization            `json:"usage"`
+	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
+	ObjectCount         int64                  `json:"objectcnt"`
+}
+
+type System struct {
+	Name                string                 `json:"name"`
+	Usage               Utilization            `json:"usage"`
+	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
+	ObjectCount         int64                  `json:"objectcnt"`
+	SLUCount            map[string]int         `json:"slucount"`
+	NodesCount          map[string]int         `json:"nodescount"`
+	ClustersCount       map[string]int         `json:"clusterscount"`
+}
+
+type Utilization struct {
+	Used  int64 `json:"used"`
+	Total int64 `json:"total"`
 }
 
 type MonitoringState struct {

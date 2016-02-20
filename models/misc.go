@@ -122,12 +122,14 @@ type QueryOps struct {
 const (
 	DEFAULT_SSH_PORT   = 22
 	DEFAULT_FS_TYPE    = "xfs"
+	ENGINE_NAME        = "skyring"
 	REQUEST_SIZE_LIMIT = 1048576
 
 	COLL_NAME_STORAGE               = "storage"
 	COLL_NAME_NODE_EVENTS           = "node_events"
 	COLL_NAME_STORAGE_NODES         = "storage_nodes"
 	COLL_NAME_STORAGE_CLUSTERS      = "storage_clusters"
+	COLL_NAME_SKYRING_UTILIZATION   = "skyring_utilization"
 	COLL_NAME_STORAGE_LOGICAL_UNITS = "storage_logical_units"
 	COLL_NAME_TASKS                 = "tasks"
 	COLL_NAME_SESSION_STORE         = "skyring_session_store"
@@ -271,6 +273,13 @@ var NodeStates = [...]string{
 	"failed",
 	"unmanaged",
 }
+
+const (
+	NODES   = "nodes"
+	CLUSTER = "cluster"
+	TOTAL   = "total"
+	SYSTEM  = "system"
+)
 
 func (s NodeState) String() string { return NodeStates[s] }
 

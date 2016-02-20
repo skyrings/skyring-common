@@ -43,7 +43,6 @@ var (
 	templateUntilTime       = "&until={{.end_time}}"
 	timeFormat              = "15:04_20060102"
 	standardTimeFormat      = "2006-01-02T15:04:05.000Z"
-	latest                  = "latest"
 	fullQualifiedMetricName bool
 )
 
@@ -127,7 +126,7 @@ func getUrlBaseTemplateParams(params map[string]interface{}) (map[string]interfa
 		target = target + targetWildCard
 	}
 
-	if params["interval"] == latest {
+	if params["interval"] == monitoring.Latest {
 		target, targetErr = GetTemplateParsedString(map[string]interface{}{"targetGeneral": target}, targetLatest)
 		if targetErr != nil {
 			return nil, targetErr
@@ -212,7 +211,7 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			url = url + urlTime
 		}
 
-		if params["interval"] != "" && params["interval"] != latest {
+		if params["interval"] != "" && params["interval"] != monitoring.Latest {
 			timeString, timeStringError := util.GetString(params["interval"])
 			if timeStringError != nil {
 				return nil, fmt.Errorf("Start time %v. Error: %v", params["start_time"], timeStringError)
@@ -245,7 +244,7 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			if mErr := json.Unmarshal(results, &metrics); mErr != nil {
 				return nil, fmt.Errorf("Error unmarshalling the metrics %v.Error:%v", metrics, mErr)
 			}
-			if params["interval"] == latest {
+			if params["interval"] == monitoring.Latest {
 				/*
 						 The output of cactistyle graphite function(It gives summarised output including max value, min value and current non-nil value) is as under:
 					       [{"target": "<metric_name> Current:<current_val> Max:<max> Min:<min> ", "datapoints": [[val1, timestamp1],...]}

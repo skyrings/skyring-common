@@ -37,12 +37,17 @@ type AuthConfig struct {
 }
 
 type SkyringCollection struct {
-	Config               SkyringConfig      `json:"config"`
-	Logging              SkyringLogging     `json:"logging"`
-	NodeManagementConfig NodeManagerConfig  `json:"nodemanagementconfig"`
-	DBConfig             AppDBConfig        `json:"dbconfig"`
-	TimeSeriesDBConfig   MonitoringDBconfig `json:"timeseriesdbconfig"`
-	Authentication       AuthConfig         `json:"authentication"`
+	Config               SkyringConfig       `json:"config"`
+	Logging              SkyringLogging      `json:"logging"`
+	NodeManagementConfig NodeManagerConfig   `json:"nodemanagementconfig"`
+	DBConfig             AppDBConfig         `json:"dbconfig"`
+	TimeSeriesDBConfig   MonitoringDBconfig  `json:"timeseriesdbconfig"`
+	Authentication       AuthConfig          `json:"authentication"`
+	SummaryConfig        SystemSummaryConfig `json:"summary"`
+}
+
+type SystemSummaryConfig struct {
+	NetSummaryInterval int `json:"netSummaryInterval"`
 }
 
 type AppDBConfig struct {
