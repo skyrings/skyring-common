@@ -181,6 +181,20 @@ type Storage struct {
 	Options             map[string]string `json:"options"`
 }
 
+type BlockDevice struct {
+	Id                  uuid.UUID         `json:"id"`
+	Name                string            `json:"name"`
+	Tags                []string          `json:"tags"`
+	ClusterId           uuid.UUID         `json:"clusterid"`
+	StorageId           uuid.UUID         `json:"storageid"`
+	Size                string            `json:"size"`
+	SnapshotsEnabled    bool              `json:"snapshots_enabled"`
+	SnapshotScheduleIds []uuid.UUID       `json:"snapshot_schedule_ids"`
+	QuotaEnabled        bool              `json:"quota_enabled"`
+	QuotaParams         map[string]string `json:"quota_params"`
+	Options             map[string]string `json:"options"`
+}
+
 type SnapshotSchedule struct {
 	Id            uuid.UUID `json:"id"`
 	Recurrence    string    `json:"recurrence"`

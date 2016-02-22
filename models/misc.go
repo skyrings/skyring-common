@@ -69,6 +69,29 @@ type AddStorageRequest struct {
 	Options          map[string]string       `json:"options"`
 }
 
+type AddClusterBlockDeviceRequest struct {
+	Name             string                  `json:"name"`
+	Tags             []string                `json:"tags"`
+	Size             string                  `json:"size"`
+	SnapshotsEnabled bool                    `json:"snapshots_enabled"`
+	SnapshotSchedule SnapshotScheduleRequest `json:"snapshot_schedule"`
+	QuotaEnabled     bool                    `json:"quota_enabled"`
+	QuotaParams      map[string]string       `json:"quota_params"`
+	Options          map[string]string       `json:"options"`
+	BackingStorage   AddStorageRequest       `json:"backingstorage"`
+}
+
+type AddStorageBlockDeviceRequest struct {
+	Name             string                  `json:"name"`
+	Tags             []string                `json:"tags"`
+	Size             string                  `json:"size"`
+	SnapshotsEnabled bool                    `json:"snapshots_enabled"`
+	SnapshotSchedule SnapshotScheduleRequest `json:"snapshot_schedule"`
+	QuotaEnabled     bool                    `json:"quota_enabled"`
+	QuotaParams      map[string]string       `json:"quota_params"`
+	Options          map[string]string       `json:"options"`
+}
+
 type SnapshotScheduleRequest struct {
 	Recurrence    string   `json:"recurrence"`
 	Interval      int      `json:"interval"`
@@ -139,9 +162,13 @@ const (
 	COLL_NAME_STORAGE_PROFILE       = "storage_profile"
 	COLL_NAME_MAIL_NOTIFIER         = "mailnotifier"
 	COLL_NAME_LDAP                  = "ldap"
+	COLL_NAME_BLOCK_DEVICES         = "block_devices"
 
 	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
+
+	STORAGE_TYPE_REPLICATED = "replicated"
+	STORAGE_TYPE_BLOCK      = "block"
 )
 
 type Clusters []Cluster
