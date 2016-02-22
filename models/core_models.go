@@ -27,8 +27,10 @@ type Node struct {
 	PublicIP4     string            `json:"public_ip4"`
 	ClusterId     uuid.UUID         `json:"clusterid"`
 	Location      string            `json:"location"`
-	Status        string            `json:"status"`
-	State         int               `json:"state"`
+	Status        NodeStatus        `json:"status"`
+	State         NodeState         `json:"state"`
+	AlmStatus     AlarmStatus       `json:"almstatus"`
+	AlmCount      int               `json:"almcount"`
 	Options       map[string]string `json:"options"`
 	CPUs          []Cpu             `json:"cpus"`
 	NetworkInfo   Network           `json:"network_info"`
@@ -106,14 +108,16 @@ type Cluster struct {
 	CompatVersion      string            `json:"compat_version"`
 	Type               string            `json:"type"`
 	WorkLoad           string            `json:"workload"`
-	Status             int               `json:"status"`
+	Status             ClusterStatus     `json:"status"`
 	Tags               []string          `json:"tags"`
 	Options            map[string]string `json:"options"`
 	OpenStackServices  []string          `json:"openstack_services"`
 	Networks           ClusterNetworks   `json:"networks"`
 	Monitoring         MonitoringState   `json:"monitoring"`
 	MonitoringInterval int               `json:"monitoringinterval"`
-	State              int               `json:"state"`
+	State              ClusterState      `json:"state"`
+	AlmStatus          AlarmStatus       `json:"almstatus"`
+	AlmCount           int               `json:"almcount"`
 }
 
 type MonitoringState struct {
@@ -197,10 +201,10 @@ type StorageProfile struct {
 }
 
 type ExternalUsers struct {
-        Users       []User
-        TotalCount  int
-        StartIndex  int
-        EndIndex    int
+	Users      []User
+	TotalCount int
+	StartIndex int
+	EndIndex   int
 }
 
 type Directory struct {

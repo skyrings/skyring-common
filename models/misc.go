@@ -136,7 +136,7 @@ const (
 	COLL_NAME_MAIL_NOTIFIER         = "mailnotifier"
 	COLL_NAME_LDAP                  = "ldap"
 
-	TASKS_PER_PAGE = 100
+	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
 )
 
@@ -261,6 +261,7 @@ const (
 	NODE_STATE_INITIALIZING
 	NODE_STATE_ACTIVE
 	NODE_STATE_FAILED
+	NODE_STATE_UNMANAGED
 )
 
 var NodeStates = [...]string{
@@ -268,6 +269,49 @@ var NodeStates = [...]string{
 	"initializing",
 	"active",
 	"failed",
+	"unmanaged",
 }
 
 func (s NodeState) String() string { return NodeStates[s] }
+
+type NodeStatus int
+
+// Status values for the cluster
+const (
+	NODE_STATUS_OK = iota
+	NODE_STATUS_WARN
+	NODE_STATUS_ERROR
+	NODE_STATUS_UNKNOWN
+)
+
+var NodeStatuses = [...]string{
+	"ok",
+	"warning",
+	"error",
+	"unknown",
+}
+
+func (s NodeStatus) String() string { return NodeStatuses[s] }
+
+type AlarmStatus int
+
+// Status values for the cluster
+const (
+	ALARM_STATUS_INDETERMINATE = iota
+	ALARM_STATUS_CRITICAL
+	ALARM_STATUS_MAJOR
+	ALARM_STATUS_MINOR
+	ALARM_STATUS_WARNING
+	ALARM_STATUS_CLEARED
+)
+
+var AlarmStatuses = [...]string{
+	"indeterminate",
+	"critical",
+	"major",
+	"minor",
+	"warning",
+	"cleared",
+}
+
+func (s AlarmStatus) String() string { return AlarmStatuses[s] }
