@@ -38,6 +38,7 @@ type Node struct {
 	Memory        Memory            `json:"memory"`
 	OS            OperatingSystem   `json:"os"`
 	Enabled       bool              `json:"enabled"`
+	Fingerprint   string		`json:"saltfingerprint"`
 }
 
 type Network struct {
