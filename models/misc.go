@@ -39,6 +39,7 @@ type AddClusterRequest struct {
 	Networks           ClusterNetworks     `json:"networks"`
 	MonitoringPlugins  []monitoring.Plugin `json:"monitoringplugins"`
 	MonitoringInterval int                 `json:"monitoringinterval"`
+	DisableAutoExpand  bool                `json:"disableautoexpand"`
 }
 
 type ClusterNode struct {
@@ -123,6 +124,7 @@ const (
 	DEFAULT_SSH_PORT   = 22
 	DEFAULT_FS_TYPE    = "xfs"
 	ENGINE_NAME        = "skyring"
+	NODE_TYPE_OSD      = "OSD"
 	REQUEST_SIZE_LIMIT = 1048576
 
 	COLL_NAME_STORAGE               = "storage"
