@@ -186,7 +186,9 @@ type BlockDevice struct {
 	Name                string            `json:"name"`
 	Tags                []string          `json:"tags"`
 	ClusterId           uuid.UUID         `json:"clusterid"`
+	ClusterName         string            `json:"clustername"`
 	StorageId           uuid.UUID         `json:"storageid"`
+	StorageName         string            `json:"storagename"`
 	Size                string            `json:"size"`
 	SnapshotsEnabled    bool              `json:"snapshots_enabled"`
 	SnapshotScheduleIds []uuid.UUID       `json:"snapshot_schedule_ids"`
