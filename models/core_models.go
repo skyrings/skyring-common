@@ -126,13 +126,15 @@ type Cluster struct {
 }
 
 type System struct {
-	Name                string                 `json:"name"`
-	Usage               Utilization            `json:"usage"`
-	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
-	ObjectCount         int64                  `json:"objectcnt"`
-	SLUCount            map[string]int         `json:"slucount"`
-	NodesCount          map[string]int         `json:"nodescount"`
-	ClustersCount       map[string]int         `json:"clusterscount"`
+	Name                      string                            `json:"name"`
+	Usage                     Utilization                       `json:"usage"`
+	StorageProfileUsage       map[string]Utilization            `json:"storageprofileusage"`
+	ObjectCount               int64                             `json:"objectcnt"`
+	StorageCount              map[string]int                    `json:"storagecount"`
+	SLUCount                  map[string]int                    `json:"slucount"`
+	NodesCount                map[string]int                    `json:"nodescount"`
+	ClustersCount             map[string]int                    `json:"clusterscount"`
+	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 }
 
 type Utilization struct {

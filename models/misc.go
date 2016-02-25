@@ -160,6 +160,9 @@ const (
 
 	STORAGE_TYPE_REPLICATED = "replicated"
 	STORAGE_TYPE_BLOCK      = "block"
+	Monitor                 = "monitor"
+	Mon                     = "mon"
+	Yes                     = "Y"
 )
 
 type Clusters []Cluster
