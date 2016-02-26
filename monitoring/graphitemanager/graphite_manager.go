@@ -177,8 +177,8 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			return nil, urlError
 		}
 
-		if params["start_time"] != "" {
-			timeString, timeStringError := util.GetString(params["start_time"])
+		if startTime, ok := params["start_time"]; ok && startTime != "" {
+			timeString, timeStringError := util.GetString(startTime)
 			if timeStringError != nil {
 				return nil, fmt.Errorf("Start time %v. Error: %v", params["start_time"], timeStringError)
 			}
@@ -194,7 +194,7 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			url = url + urlTime
 		}
 
-		if params["end_time"] != "" {
+		if endTime, ok := params["end_time"]; ok && endTime != "" {
 			timeString, timeStringError := util.GetString(params["end_time"])
 			if timeStringError != nil {
 				return nil, fmt.Errorf("End time %v. Error : %v", params["end_time"], timeStringError)
@@ -292,6 +292,28 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			return metrics, nil
 		}
 	}
+}
+
+func (tsdbm GraphiteManager) GetInstantValue(node string, resource_name string) (float64, error) {
+	paramsToQuery := map[string]interface{}{"nodename": node, "resource": resource_name, "interval": monitoring.Latest}
+	mStats, memoryStatsFetchError := tsdbm.QueryDB(paramsToQuery)
+	if memoryStatsFetchError != nil {
+		return 0, fmt.Errorf("Failed to fetch instant memory statistics for %s.Error: %v", node, memoryStatsFetchError)
+	}
+	metrics, ok := mStats.([]GraphiteMetric)
+	if !ok || len(metrics) != 1 {
+		return 0, fmt.Errorf("Failed to get the instant stat from %v", mStats)
+	}
+	statistics := []stat(metrics[0].Stats)
+	timeStampValueArr := []interface{}(statistics[0])
+	if !ok {
+		return 0.0, fmt.Errorf("Failed to get the instant stat from %v", timeStampValueArr)
+	}
+	value, ok := timeStampValueArr[0].(string)
+	if !ok {
+		return 0.0, fmt.Errorf("Failed to get the instant stat from %v", timeStampValueArr)
+	}
+	return strconv.ParseFloat(value, 64)
 }
 
 //This method takes map[string]map[string]string ==> map[metric/table name]map[timestamp]value

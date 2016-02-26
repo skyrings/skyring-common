@@ -96,6 +96,10 @@ func (idm InfluxdbManager) QueryDB(params map[string]interface{}) (interface{}, 
 	return res, err
 }
 
+func (idm InfluxdbManager) GetInstantValue(node string, resource_name string) (float64, error) {
+	return 0.0, nil
+}
+
 func (idm InfluxdbManager) PushToDb(metrics map[string]map[string]string, hostName string, port int) error {
 	/*
 		TODO Implement

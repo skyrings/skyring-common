@@ -181,6 +181,7 @@ type Storage struct {
 	QuotaEnabled        bool              `json:"quota_enabled"`
 	QuotaParams         map[string]string `json:"quota_params"`
 	Options             map[string]string `json:"options"`
+	Usage               Utilization       `json:"usage"`
 }
 
 type BlockDevice struct {

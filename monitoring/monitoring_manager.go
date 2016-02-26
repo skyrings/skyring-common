@@ -12,7 +12,7 @@ type MonitoringManagersFactory func(config io.Reader) (MonitoringManagerInterfac
 
 var GeneralResources = []string{
 	"df",
-	"memory",
+	MEMORY,
 	"cpu",
 	"disk",
 	"network",

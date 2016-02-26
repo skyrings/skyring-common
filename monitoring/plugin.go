@@ -33,6 +33,10 @@ const (
 	NO_OF_OBJECT                = "no_of_object"
 	PG_SUMMARY                  = "pg_summary"
 	Latest                      = "latest"
+	MEMORY                      = "memory"
+	USED                        = "used"
+	TOTAL                       = "total"
+	FREE                        = "free"
 )
 
 var (
@@ -49,7 +53,7 @@ var (
 
 	SupportedMonitoringPlugins = []string{
 		"df",
-		"memory",
+		MEMORY,
 		"cpu",
 		"disk",
 		"network",
