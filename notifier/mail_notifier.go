@@ -169,16 +169,19 @@ func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) 
 	}
 
 	msg := []byte("To: " + to_list.String() + "\r\n" +
-		"Subject: " + subject + "\r\n" +
+		"Subject: " + notifier.SubPrefix + subject +
 		"\r\n" +
 		body + "\r\n")
+
 	if client == nil {
 		err := SetMailClient(notifier)
 		if err != nil {
 			return err
 		}
 	}
-
+	if !notifier.MailNotification {
+		return nil
+	}
 	err = sendMail(notifier.MailId, recepients, msg)
 	if err != nil {
 		// retry once again after setting the client, as client might have timed out
@@ -192,5 +195,38 @@ func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) 
 			return err
 		}
 	}
+	return nil
+}
+
+func TestMailNotify(notifier models.MailNotifier, subject string, body string, recepient []string) error {
+	msg := []byte("To: " + recepient[0] + "\r\n" +
+		"Subject: " + notifier.SubPrefix + subject +
+		"\r\n" +
+		body + "\r\n")
+	if client == nil {
+		err := SetMailClient(notifier)
+		if err != nil {
+			logger.Get().Error("Error setting the Mail Client Error: %v", err)
+			return err
+		}
+	}
+	if !notifier.MailNotification {
+                return nil
+        }
+	err := sendMail(notifier.MailId, recepient, msg)
+	if err != nil {
+		// retry once again after setting the client, as client might have timed out
+		if err := SetMailClient(notifier); err != nil {
+			if err != nil {
+				logger.Get().Error("Error setting the Mail Client Error: %v", err)
+				return err
+			}
+		}
+		if err := sendMail(notifier.MailId, recepient, msg); err != nil {
+			logger.Get().Error("Could not Send the Mail Notification. Error: %v", err)
+			return err
+		}
+	}
+	client = nil
 	return nil
 }

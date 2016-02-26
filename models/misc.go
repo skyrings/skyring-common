@@ -113,12 +113,14 @@ type Event struct {
 }
 
 type MailNotifier struct {
-	MailId     string `json:"mailid"`
-	Passcode   string `json:"passcode"`
-	SmtpServer string `json:"smtpserver"`
-	Port       int    `json:"port"`
-	Encryption string `json:"encryption"`
-	SkipVerify bool   `json:"skipverify"`
+	MailId           string `json:"mailid"`
+	Passcode         string `json:"passcode"`
+	SmtpServer       string `json:"smtpserver"`
+	Port             int    `json:"port"`
+	Encryption       string `json:"encryption"`
+	SkipVerify       bool   `json:"skipverify"`
+	MailNotification bool   `json:"mailnotification"`
+	SubPrefix        string `json:"subprefix"`
 }
 
 type QueryOps struct {
