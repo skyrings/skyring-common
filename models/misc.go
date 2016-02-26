@@ -112,6 +112,29 @@ type Event struct {
 	Severity  string            `json:"severity"`
 }
 
+type AppEvent struct {
+	EventId            uuid.UUID          `json:"event_id"`
+	ClusterId          uuid.UUID          `json:"cluster_id"`
+	ClusterName        string             `json:"cluster_name"`
+	NotificationEntity NotificationEntity `json:"notificationentity"`
+	EntityId           uuid.UUID          `json:"entityid"`
+	NodeId             uuid.UUID          `json:"node_id"`
+	NodeName           string             `json:"nodename"`
+	Timestamp          time.Time          `json:"timestamp"`
+	Name               string             `json:"name"`
+	Tags               map[string]string  `json:"tags"`
+	Message            string             `json:"message"`
+	Description        string             `json:"description"`
+	Severity           AlarmStatus        `json:"severity"`
+	CorrelationId      uuid.UUID          `json:"correlationid"`
+	Acked              bool               `json:"acked"`
+	AckedTime          time.Time          `json:"ackedtime"`
+	AckedBy            string             `json:"ackedby"`
+	AckComment         string             `json:"ackcomment"`
+	Notify             bool               `json:"notify"`
+	Notified           bool               `json:"notified"`
+}
+
 type MailNotifier struct {
 	MailId           string `json:"mailid"`
 	Passcode         string `json:"passcode"`
@@ -143,6 +166,7 @@ const (
 
 	COLL_NAME_STORAGE               = "storage"
 	COLL_NAME_NODE_EVENTS           = "node_events"
+	COLL_NAME_APP_EVENTS            = "app_events"
 	COLL_NAME_STORAGE_NODES         = "storage_nodes"
 	COLL_NAME_STORAGE_CLUSTERS      = "storage_clusters"
 	COLL_NAME_SKYRING_UTILIZATION   = "skyring_utilization"
@@ -347,3 +371,24 @@ var AlarmStatuses = [...]string{
 }
 
 func (s AlarmStatus) String() string { return AlarmStatuses[s] }
+
+type NotificationEntity int
+
+// types of notification entities
+const (
+	NOTIFICATION_ENTITY_HOST = iota
+	NOTIFICATION_ENTITY_CLUSTER
+	NOTIFICATION_ENTITY_SLU
+	NOTIFICATION_ENTITY_STORAGE
+	NOTIFICATION_ENTITY_USER
+)
+
+var NotificationEntities = [...]string{
+	"Host",
+	"Cluster",
+	"Slu",
+	"Storage",
+	"User",
+}
+
+func (s NotificationEntity) String() string { return NotificationEntities[s] }
