@@ -392,3 +392,41 @@ var NotificationEntities = [...]string{
 }
 
 func (s NotificationEntity) String() string { return NotificationEntities[s] }
+
+type SluStatus int
+
+// Status values for the cluster
+const (
+	SLU_STATUS_OK = iota
+	SLU_STATUS_WARN
+	SLU_STATUS_ERROR
+	SLU_STATUS_UNKNOWN
+)
+
+var SluStatuses = [...]string{
+	"ok",
+	"warning",
+	"error",
+	"unknown",
+}
+
+func (s SluStatus) String() string { return SluStatuses[s] }
+
+type StorageStatus int
+
+// Status values for the cluster
+const (
+	STORAGE_STATUS_OK = iota
+	STORAGE_STATUS_WARN
+	STORAGE_STATUS_ERROR
+	STORAGE_STATUS_UNKNOWN
+)
+
+var StorageStatuses = [...]string{
+	"ok",
+	"warning",
+	"error",
+	"unknown",
+}
+
+func (s StorageStatus) String() string { return StorageStatuses[s] }

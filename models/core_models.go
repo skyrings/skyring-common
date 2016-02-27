@@ -161,9 +161,12 @@ type StorageLogicalUnit struct {
 	StorageId         uuid.UUID         `json:"storageid"`
 	StorageDeviceId   uuid.UUID         `json:"storagedeviceid"`
 	StorageDeviceSize uint64            `json:"storagedevicesize"`
-	Status            string            `json:"status"`
+	Status            SluStatus         `json:"status"`
 	Options           map[string]string `json:"options"`
 	StorageProfile    string            `json:"storageprofile"`
+	State             string            `json:"state"`
+	AlmStatus         AlarmStatus       `json:"almstatus"`
+	AlmCount          int               `json:"almcount"`
 }
 
 type Storage struct {
@@ -173,7 +176,7 @@ type Storage struct {
 	Tags                []string          `json:"tags"`
 	ClusterId           uuid.UUID         `json:"clusterid"`
 	Size                string            `json:"size"`
-	Status              string            `json:"status"`
+	Status              StorageStatus     `json:"status"`
 	Replicas            int               `json:"replicas"`
 	Profile             string            `json:"profile"`
 	SnapshotsEnabled    bool              `json:"snapshots_enabled"`
@@ -182,6 +185,9 @@ type Storage struct {
 	QuotaParams         map[string]string `json:"quota_params"`
 	Options             map[string]string `json:"options"`
 	Usage               Utilization       `json:"usage"`
+	State               string            `json:"state"`
+	AlmStatus           AlarmStatus       `json:"almstatus"`
+	AlmCount            int               `json:"almcount"`
 }
 
 type BlockDevice struct {
