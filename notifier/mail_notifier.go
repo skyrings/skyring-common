@@ -133,7 +133,7 @@ func getMailRecepients(dbProvider dbprovider.DbInterface) ([]string, error) {
 	return recepients, nil
 }
 
-func SetMailClient(notifier models.MailNotifier) error {
+func SetMailClient(notifier models.MailNotifier, ctxt string) error {
 	password, err := base64.StdEncoding.DecodeString(notifier.Passcode)
 	auth := smtp.PlainAuth("", notifier.MailId, string(password), notifier.SmtpServer)
 	hostPort := fmt.Sprintf("%s:%s", notifier.SmtpServer, strconv.Itoa(notifier.Port))
@@ -143,22 +143,22 @@ func SetMailClient(notifier models.MailNotifier) error {
 		err = setTLSMailClient(hostPort, auth, notifier.SkipVerify)
 	}
 	if err != nil {
-		logger.Get().Error("Error setting the Mail Client Error: %v", err)
+		logger.Get().Error("%s-Error setting the Mail Client Error: %v", ctxt, err)
 		return errors.New(fmt.Sprintf("Error setting the Mail Client Error: %v", err))
 	}
 	return nil
 }
 
-func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) error {
+func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface, ctxt string) error {
 	notifier, err := getNotifier(dbProvider)
 	if err != nil {
-		logger.Get().Warning("Could not Get the notifier. Error: %v", err)
+		logger.Get().Warning("%s-Could not Get the notifier. Error: %v", ctxt, err)
 		return errors.New(fmt.Sprintf("Could not Get the notifier. Error: %v", err))
 	}
 
 	recepients, err := getMailRecepients(dbProvider)
 	if err != nil || len(recepients) == 0 {
-		logger.Get().Warning("Could not Get any recepients. Error: %v", err)
+		logger.Get().Warning("%s-Could not Get any recepients. Error: %v", ctxt, err)
 		return errors.New(fmt.Sprintf("Could not Get any recepients. Error: %v", err))
 	}
 
@@ -167,14 +167,14 @@ func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) 
 		to_list.WriteString(id)
 		to_list.WriteString(",")
 	}
-
+	subject = fmt.Sprintf("%s: ", notifier.SubPrefix) + subject
 	msg := []byte("To: " + to_list.String() + "\r\n" +
-		"Subject: " + notifier.SubPrefix + subject +
+		"Subject: " + subject + "\r\n" +
 		"\r\n" +
 		body + "\r\n")
 
 	if client == nil {
-		err := SetMailClient(notifier)
+		err := SetMailClient(notifier, ctxt)
 		if err != nil {
 			return err
 		}
@@ -185,45 +185,42 @@ func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface) 
 	err = sendMail(notifier.MailId, recepients, msg)
 	if err != nil {
 		// retry once again after setting the client, as client might have timed out
-		if err := SetMailClient(notifier); err != nil {
+		if err := SetMailClient(notifier, ctxt); err != nil {
 			if err != nil {
 				return err
 			}
 		}
 		if err = sendMail(notifier.MailId, recepients, msg); err != nil {
-			logger.Get().Error("Could not Send the Mail Notification. Error: %v", err)
+			logger.Get().Error("%s-Could not Send the Mail Notification. Error: %v", ctxt, err)
 			return err
 		}
 	}
 	return nil
 }
 
-func TestMailNotify(notifier models.MailNotifier, subject string, body string, recepient []string) error {
+func TestMailNotify(notifier models.MailNotifier, subject string, body string, recepient []string, ctxt string) error {
+	subject = fmt.Sprintf("%s: ", notifier.SubPrefix) + subject
 	msg := []byte("To: " + recepient[0] + "\r\n" +
-		"Subject: " + notifier.SubPrefix + subject +
+		"Subject: " + subject + "\r\n" +
 		"\r\n" +
 		body + "\r\n")
-	if client == nil {
-		err := SetMailClient(notifier)
-		if err != nil {
-			logger.Get().Error("Error setting the Mail Client Error: %v", err)
-			return err
-		}
+	err := SetMailClient(notifier, ctxt)
+	if err != nil {
+		logger.Get().Error("%s-Error setting the Mail Client Error: %v", ctxt, err)
+		return err
 	}
-	if !notifier.MailNotification {
-                return nil
-        }
-	err := sendMail(notifier.MailId, recepient, msg)
+
+	err = sendMail(notifier.MailId, recepient, msg)
 	if err != nil {
 		// retry once again after setting the client, as client might have timed out
-		if err := SetMailClient(notifier); err != nil {
+		if err := SetMailClient(notifier, ctxt); err != nil {
 			if err != nil {
-				logger.Get().Error("Error setting the Mail Client Error: %v", err)
+				logger.Get().Error("%s-Error setting the Mail Client Error: %v", ctxt, err)
 				return err
 			}
 		}
 		if err := sendMail(notifier.MailId, recepient, msg); err != nil {
-			logger.Get().Error("Could not Send the Mail Notification. Error: %v", err)
+			logger.Get().Error("%s-Could not Send the Mail Notification. Error: %v", ctxt, err)
 			return err
 		}
 	}
