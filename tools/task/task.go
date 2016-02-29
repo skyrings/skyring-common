@@ -41,6 +41,7 @@ type Task struct {
 	StartedCbkFunc   func(t *Task)
 	CompletedCbkFunc func(t *Task)
 	StatusCbkFunc    func(t *Task, s *models.Status)
+	LastUpdated      time.Time
 }
 
 func (t Task) String() string {
@@ -49,6 +50,7 @@ func (t Task) String() string {
 
 func (t *Task) UpdateStatus(format string, args ...interface{}) {
 	s := models.Status{Timestamp: time.Now(), Message: fmt.Sprintf(format, args...)}
+	t.LastUpdated = time.Now()
 	t.Mutex.Lock()
 	t.StatusList = append(t.StatusList, s)
 	t.UpdateStatusList(t.StatusList)
@@ -71,6 +73,7 @@ func (t *Task) Done(status models.TaskStatus) {
 	t.DoneCh <- true
 	close(t.DoneCh)
 	t.Completed = true
+	t.LastUpdated = time.Now()
 	t.UpdateTaskCompleted(t.Completed, status)
 }
 
@@ -119,7 +122,7 @@ func (t *Task) UpdateStatusList(status []models.Status) (bool, error) {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
-	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"statuslist": status}}); err != nil {
+	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"statuslist": status, "lastupdated": t.LastUpdated}}); err != nil {
 		//logger.Get().Error("Error updating status list for task: %v. error: %v", t.ID, err)
 		return false, err
 	}
@@ -131,7 +134,7 @@ func (t *Task) UpdateTaskCompleted(b bool, status models.TaskStatus) (bool, erro
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
-	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"completed": b, "status": status}}); err != nil {
+	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"completed": b, "status": status, "lastupdated": t.LastUpdated}}); err != nil {
 		//logger.Get().Error("Error updating status of task: %v. error: %v", t.ID, err)
 		return false, err
 	}

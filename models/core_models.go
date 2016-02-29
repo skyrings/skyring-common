@@ -222,15 +222,16 @@ type Status struct {
 }
 
 type AppTask struct {
-	Id         uuid.UUID         `json:"id"`
-	Name       string            `json:"name"`
-	ParentId   uuid.UUID         `json:"parentid"`
-	Started    bool              `json:"started"`
-	Completed  bool              `json:"completed"`
-	StatusList []Status          `json:"statuslist"`
-	Tag        map[string]string `json:"tag"`
-	SubTasks   []uuid.UUID       `json:"subtasks"`
-	Status     TaskStatus        `json:"status"`
+	Id          uuid.UUID         `json:"id"`
+	Name        string            `json:"name"`
+	ParentId    uuid.UUID         `json:"parentid"`
+	Started     bool              `json:"started"`
+	Completed   bool              `json:"completed"`
+	StatusList  []Status          `json:"statuslist"`
+	Tag         map[string]string `json:"tag"`
+	LastUpdated time.Time         `json:"lastupdated"`
+	SubTasks    []uuid.UUID       `json:"subtasks"`
+	Status      TaskStatus        `json:"status"`
 }
 
 type DiskProfile struct {
