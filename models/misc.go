@@ -181,6 +181,7 @@ const (
 
 	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
+	EVENTS_PER_PAGE     = 100
 
 	STORAGE_TYPE_REPLICATED = "replicated"
 	STORAGE_TYPE_BLOCK      = "block"
