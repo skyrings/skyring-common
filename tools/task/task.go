@@ -19,7 +19,7 @@ import (
 	"github.com/skyrings/skyring-common/conf"
 	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
-	//"github.com/skyrings/skyring-common/tools/logger"
+	"github.com/skyrings/skyring-common/tools/logger"
 	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
@@ -49,12 +49,17 @@ func (t Task) String() string {
 }
 
 func (t *Task) UpdateStatus(format string, args ...interface{}) {
+	defer ignorePanic()
+
 	s := models.Status{Timestamp: time.Now(), Message: fmt.Sprintf(format, args...)}
 	t.LastUpdated = time.Now()
 	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
+	if t.IsDone() {
+		return
+	}
 	t.StatusList = append(t.StatusList, s)
 	t.UpdateStatusList(t.StatusList)
-	t.Mutex.Unlock()
 	if t.StatusCbkFunc != nil {
 		go t.StatusCbkFunc(t, &s)
 	}
@@ -70,6 +75,16 @@ func (t *Task) Run() {
 }
 
 func (t *Task) Done(status models.TaskStatus) {
+	// Handle any panic
+	defer ignorePanic()
+
+	// If task has timed out error out smoothly
+	t.Mutex.Lock()
+	defer t.Mutex.Unlock()
+	if t.IsDone() {
+		logger.Get().Warning("Task: %v alreday in closed state. May be timed-out.", t.ID)
+		return
+	}
 	t.DoneCh <- true
 	close(t.DoneCh)
 	t.Completed = true
@@ -77,15 +92,10 @@ func (t *Task) Done(status models.TaskStatus) {
 	t.UpdateTaskCompleted(t.Completed, status)
 }
 
-/*func (t *Task) IsDone() bool {
+func (t *Task) IsDone() bool {
 	select {
 	case _, read := <-t.DoneCh:
 		if read == true {
-			t.Completed = true
-			t.UpdateTaskCompleted(t.Completed, models.TASK_STATUS_FAILURE)
-			if t.CompletedCbkFunc != nil {
-				go t.CompletedCbkFunc(t)
-			}
 			return true
 		} else {
 			// DoneCh is in closed state
@@ -94,7 +104,7 @@ func (t *Task) Done(status models.TaskStatus) {
 	default:
 		return false
 	}
-}*/
+}
 
 func (t *Task) Persist() (bool, error) {
 	sessionCopy := db.GetDatastore().Copy()
@@ -111,7 +121,7 @@ func (t *Task) Persist() (bool, error) {
 	appTask.Tag = t.Tag
 
 	if err := coll.Insert(appTask); err != nil {
-		//logger.Get().Error("Error persisting task: %v. error: %v", t.ID, err)
+		logger.Get().Error("Error persisting task: %v. error: %v", t.ID, err)
 		return false, err
 	}
 
@@ -123,7 +133,7 @@ func (t *Task) UpdateStatusList(status []models.Status) (bool, error) {
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
 	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"statuslist": status, "lastupdated": t.LastUpdated}}); err != nil {
-		//logger.Get().Error("Error updating status list for task: %v. error: %v", t.ID, err)
+		logger.Get().Error("Error updating status list for task: %v. error: %v", t.ID, err)
 		return false, err
 	}
 
@@ -135,7 +145,7 @@ func (t *Task) UpdateTaskCompleted(b bool, status models.TaskStatus) (bool, erro
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
 	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"completed": b, "status": status, "lastupdated": t.LastUpdated}}); err != nil {
-		//logger.Get().Error("Error updating status of task: %v. error: %v", t.ID, err)
+		logger.Get().Error("Error updating status of task: %v. error: %v", t.ID, err)
 		return false, err
 	}
 
@@ -147,20 +157,27 @@ func (t *Task) AddSubTask(subTaskId uuid.UUID) (bool, error) {
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
 	if err := coll.Update(bson.M{"id": subTaskId}, bson.M{"$set": bson.M{"parentid": t.ID}}); err != nil {
-		//logger.Get().Error("Error updating sub task for task: %v. error: %v", t.ID, err)
+		logger.Get().Error("Error updating sub task for task: %v. error: %v", t.ID, err)
 		return false, err
 	}
 	//Update the sutask id on the parent task
 	var task models.AppTask
 	if err := coll.Find(bson.M{"id": t.ID}).One(&task); err != nil {
-		//logger.Get().Error("Unable to get task: %v", err)
+		logger.Get().Error("Unable to get task: %v", err)
 		return false, err
 	}
 	task.SubTasks = append(task.SubTasks, subTaskId)
 	if err := coll.Update(bson.M{"id": t.ID}, task); err != nil {
-		//logger.Get().Error("Error updating sub task for task: %v. error: %v", t.ID, err)
+		logger.Get().Error("Error updating sub task for task: %v. error: %v", t.ID, err)
 		return false, err
 	}
 
 	return true, nil
+}
+
+func ignorePanic() {
+	if err := recover(); err != nil {
+		// Recovered, return
+		return
+	}
 }
