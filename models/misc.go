@@ -183,11 +183,11 @@ const (
 	LDAP_USERS_PER_PAGE = 100
 	EVENTS_PER_PAGE     = 100
 
-	STORAGE_TYPE_REPLICATED = "replicated"
-	STORAGE_TYPE_BLOCK      = "block"
-	Monitor                 = "monitor"
-	Mon                     = "mon"
-	Yes                     = "Y"
+	STORAGE_TYPE_REPLICATED    = "replicated"
+	STORAGE_TYPE_ERASURE_CODED = "erasure_coded"
+	Monitor                    = "monitor"
+	Mon                        = "mon"
+	Yes                        = "Y"
 )
 
 type Clusters []Cluster
