@@ -157,6 +157,13 @@ type QueryOps struct {
 	Distinct bool
 }
 
+type ApiRoute struct {
+	Name    string
+	Pattern string
+	Method  string
+	Version int
+}
+
 const (
 	DEFAULT_SSH_PORT   = 22
 	DEFAULT_FS_TYPE    = "xfs"

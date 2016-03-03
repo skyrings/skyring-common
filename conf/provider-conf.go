@@ -33,8 +33,9 @@ type ProviderConfig struct {
 }
 
 type ProviderInfo struct {
-	Provider ProviderConfig `json:"provider"`
-	Routes   []Route        `json:"routes"`
+	Provider    ProviderConfig    `json:"provider"`
+	Routes      []Route           `json:"routes"`
+	Provisioner ProvisionerConfig `json:"provisioner"`
 }
 
 func LoadProviderConfig(providerConfigDir string) []ProviderInfo {
@@ -63,9 +64,10 @@ func LoadProviderConfig(providerConfigDir string) []ProviderInfo {
 			continue
 		}
 		collection = append(collection, data)
+		SystemConfig.Provisioners[data.Provider.Name] = data.Provisioner
 		data = ProviderInfo{}
 	}
-	logger.Get().Debug("Collection:", collection)
+	logger.Get().Debug("Collection:%v", collection)
 	return collection
 
 }

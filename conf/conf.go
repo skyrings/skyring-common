@@ -36,14 +36,20 @@ type AuthConfig struct {
 	ConfigFile   string
 }
 
+type ProvisionerConfig struct {
+	ProvisionerName string `json:"provisionername"`
+	ConfigFilePath  string `json:"configfilepath"`
+}
+
 type SkyringCollection struct {
-	Config               SkyringConfig       `json:"config"`
-	Logging              SkyringLogging      `json:"logging"`
-	NodeManagementConfig NodeManagerConfig   `json:"nodemanagementconfig"`
-	DBConfig             AppDBConfig         `json:"dbconfig"`
-	TimeSeriesDBConfig   MonitoringDBconfig  `json:"timeseriesdbconfig"`
-	Authentication       AuthConfig          `json:"authentication"`
-	SummaryConfig        SystemSummaryConfig `json:"summary"`
+	Config               SkyringConfig                `json:"config"`
+	Logging              SkyringLogging               `json:"logging"`
+	NodeManagementConfig NodeManagerConfig            `json:"nodemanagementconfig"`
+	DBConfig             AppDBConfig                  `json:"dbconfig"`
+	TimeSeriesDBConfig   MonitoringDBconfig           `json:"timeseriesdbconfig"`
+	Authentication       AuthConfig                   `json:"authentication"`
+	SummaryConfig        SystemSummaryConfig          `json:"summary"`
+	Provisioners         map[string]ProvisionerConfig `json:"provisioners"`
 }
 
 type SystemSummaryConfig struct {
@@ -87,4 +93,6 @@ func LoadAppConfiguration(configFilePath string) {
 	if err != nil {
 		logger.Get().Critical("Error Unmarshalling SkyRing Config. error: %v", err)
 	}
+	//Initialize the Provisioner Map
+	SystemConfig.Provisioners = make(map[string]ProvisionerConfig)
 }
