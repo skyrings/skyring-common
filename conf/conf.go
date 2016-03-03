@@ -58,10 +58,15 @@ type SkyringCollection struct {
 	SummaryConfig        SystemSummaryConfig          `json:"summary"`
 	Provisioners         map[string]ProvisionerConfig `json:"provisioners"`
 	SysCapabilities      SystemCapabilities           `json:"systemcapabilities"`
+	ScheduleConfig       ScheduleConfig               `json:"schedule"`
 }
 
 type SystemSummaryConfig struct {
 	NetSummaryInterval int `json:"netSummaryInterval"`
+}
+
+type ScheduleConfig struct {
+	ClustersSyncInterval int `json:"clustersSyncInterval"`
 }
 
 type AppDBConfig struct {

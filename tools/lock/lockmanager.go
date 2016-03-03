@@ -59,21 +59,21 @@ func (manager *Manager) AcquireLock(ctxt string, appLock AppLock) error {
 		}
 	}
 	//lock can be acquired, so lock the nodes
-	logger.Get().Debug("Currently Locked:", manager.locks)
-	logger.Get().Debug("Acquiring the locks for:", appLock.GetAppLocks())
+	logger.Get().Debug("%s-Currently Locked: %v", ctxt, manager.locks)
+	logger.Get().Debug("%s-Acquiring the locks for: %v", ctxt, appLock.GetAppLocks())
 	for k, v := range appLock.GetAppLocks() {
-		logger.Get().Debug("%s-Lock Acquired for: ", ctxt, k)
+		logger.Get().Debug("%s-Lock Acquired for: %v", ctxt, k)
 		manager.locks[k] = NewLockInternal(v)
 	}
-	logger.Get().Debug("%s-Currently Locked:", ctxt, manager.locks)
+	logger.Get().Debug("%s-Currently Locked: %v", ctxt, manager.locks)
 	return nil
 }
 
 func (manager *Manager) ReleaseLock(ctxt string, appLock AppLock) {
 	lockMutex.Lock()
 	defer lockMutex.Unlock()
-	logger.Get().Debug("Currently Locked:", manager.locks)
-	logger.Get().Debug("Releasing the locks for:", appLock.GetAppLocks())
+	logger.Get().Debug("%s-Currently Locked: %v", ctxt, manager.locks)
+	logger.Get().Debug("%s-Releasing the locks for: %v", ctxt, appLock.GetAppLocks())
 	for k := range appLock.GetAppLocks() {
 		//check if the lock exists
 		if _, ok := manager.locks[k]; !ok {

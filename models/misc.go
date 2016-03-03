@@ -263,6 +263,7 @@ const (
 	CLUSTER_STATE_FAILED
 	CLUSTER_STATE_ACTIVE
 	CLUSTER_STATE_UNMANAGED
+	CLUSTER_STATE_SYNCING
 )
 
 var ClusterStates = [...]string{
@@ -270,6 +271,7 @@ var ClusterStates = [...]string{
 	"failed",
 	"active",
 	"unmanaged",
+	"syncing",
 }
 
 func (s ClusterState) String() string { return ClusterStates[s] }
