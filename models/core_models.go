@@ -138,8 +138,9 @@ type System struct {
 }
 
 type Utilization struct {
-	Used  int64 `json:"used"`
-	Total int64 `json:"total"`
+	Used        int64   `json:"used"`
+	Total       int64   `json:"total"`
+	PercentUsed float64 `json:"percentused"`
 }
 
 type MonitoringState struct {

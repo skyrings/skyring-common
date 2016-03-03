@@ -42,6 +42,15 @@ type AddClusterRequest struct {
 	DisableAutoExpand  bool                `json:"disableautoexpand"`
 }
 
+type ClusterSummary struct {
+	MostUsedPools []PoolUsage `json:"poolusage"`
+}
+
+type PoolUsage struct {
+	Name  string      `json:"name"`
+	Usage Utilization `json:"usage"`
+}
+
 type ClusterNode struct {
 	NodeId   string              `json:"nodeid"`
 	NodeType []string            `json:"nodetype"`
