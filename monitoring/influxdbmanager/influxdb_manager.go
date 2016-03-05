@@ -44,6 +44,10 @@ func queryDB(cmd string) (res []influxdb.Result, err error) {
 	return
 }
 
+func (idm InfluxdbManager) GetResourceName(params map[string]interface{}) (string, error) {
+	return "", nil
+}
+
 func (idm InfluxdbManager) QueryDB(params map[string]interface{}) (interface{}, error) {
 	var resource_name string
 	var nodename string

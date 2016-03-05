@@ -100,6 +100,21 @@ func GetTemplateParsedString(urlParams map[string]interface{}, templateString st
 	return buf.String(), nil
 }
 
+var resourceCollectionNameMapper = map[string]string{
+	monitoring.NETWORK_LATENCY: "ping.ping-{{.serverName}}",
+	monitoring.CPU_USER:        "cpu.percent-user",
+}
+
+func (tsdbm GraphiteManager) GetResourceName(params map[string]interface{}) (string, error) {
+	resource_name, ok := params["resource_name"].(string)
+	if ok {
+		collectionNameTemplate := resourceCollectionNameMapper[resource_name]
+		return GetTemplateParsedString(params, collectionNameTemplate)
+	} else {
+		return "", fmt.Errorf("Resource %v not found", params["resource_name"])
+	}
+}
+
 func getUrlBaseTemplateParams(params map[string]interface{}) (map[string]interface{}, error) {
 	var nodename string
 	var nodeNameError error
