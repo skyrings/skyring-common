@@ -38,9 +38,11 @@ const (
 	PG_SUMMARY                  = "pg_summary"
 	Latest                      = "latest"
 	MEMORY                      = "memory"
+	CPU_USER                    = "cpu-user"
 	USED                        = "used"
 	TOTAL                       = "total"
 	FREE                        = "free"
+	NETWORK_LATENCY             = "network_latency"
 )
 
 var (

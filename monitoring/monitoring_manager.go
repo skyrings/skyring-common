@@ -22,6 +22,7 @@ var GeneralResources = []string{
 	SLU_UTILIZATION,
 	NO_OF_OBJECT,
 	PG_SUMMARY,
+	"ping",
 }
 
 var (
