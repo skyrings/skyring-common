@@ -121,7 +121,7 @@ type Cluster struct {
 	AlmCount            int                    `json:"almcount"`
 	Usage               Utilization            `json:"usage"`
 	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
-	ObjectCount         int64                  `json:"objectcnt"`
+	ObjectCount         map[string]int64       `json:"objectcount"`
 	AutoExpand          bool                   `json:"autoexpand"`
 }
 
@@ -129,7 +129,6 @@ type System struct {
 	Name                      string                            `json:"name"`
 	Usage                     Utilization                       `json:"usage"`
 	StorageProfileUsage       map[string]Utilization            `json:"storageprofileusage"`
-	ObjectCount               int64                             `json:"objectcnt"`
 	StorageCount              map[string]int                    `json:"storagecount"`
 	SLUCount                  map[string]int                    `json:"slucount"`
 	NodesCount                map[string]int                    `json:"nodescount"`

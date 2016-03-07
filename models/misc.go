@@ -43,7 +43,14 @@ type AddClusterRequest struct {
 }
 
 type ClusterSummary struct {
-	MostUsedPools []PoolUsage `json:"poolusage"`
+	MostUsedPools             []PoolUsage                       `json:"poolusage"`
+	Usage                     Utilization                       `json:"usage"`
+	StorageProfileUsage       map[string]Utilization            `json:"storageprofileusage"`
+	ObjectCount               map[string]int64                  `json:"objectcount"`
+	StorageCount              map[string]int                    `json:"storagecount"`
+	SLUCount                  map[string]int                    `json:"slucount"`
+	NodesCount                map[string]int                    `json:"nodescount"`
+	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 }
 
 type PoolUsage struct {
