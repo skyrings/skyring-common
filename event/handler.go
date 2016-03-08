@@ -19,12 +19,12 @@ import (
 	"github.com/skyrings/skyring-common/tools/logger"
 )
 
-func Persist_event(event models.Event) error {
+func Persist_event(event models.Event, ctxt string) error {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_NODE_EVENTS)
 	if err := coll.Insert(event); err != nil {
-		logger.Get().Error("Error adding the node event: %v", err)
+		logger.Get().Error("%s-Error adding the node event: %v", ctxt, err)
 		return err
 	}
 	return nil

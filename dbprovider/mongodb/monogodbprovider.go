@@ -74,7 +74,6 @@ func mkmgoerror(msg string) error {
 //Set up the indexes for the Db
 //Can be called during the initialization
 func (m MongoDb) InitDb() error {
-
 	if err := m.InitUser(); err != nil {
 		logger.Get().Error("Error Initilaizing User Table", err)
 		return err

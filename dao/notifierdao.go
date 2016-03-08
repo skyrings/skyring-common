@@ -17,6 +17,6 @@ import (
 )
 
 type MailNotifierInterface interface {
-	MailNotifier() (models.MailNotifier, error)
-	SaveMailNotifier(notifier models.MailNotifier) error
+	MailNotifier(ctxt string) (models.MailNotifier, error)
+	SaveMailNotifier(ctxt string, notifier models.MailNotifier) error
 }

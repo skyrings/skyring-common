@@ -20,18 +20,10 @@ import (
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/notifier"
 	"github.com/skyrings/skyring-common/tools/logger"
-	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func AuditLog(event models.AppEvent, dbprovider dbprovider.DbInterface) error {
-	reqId, err := uuid.New()
-	if err != nil {
-		logger.Get().Error("Error Creating the RequestId. error: %v", err)
-		return err
-	}
-	ctxt := fmt.Sprintf("%v:%v", models.ENGINE_NAME, reqId.String())
-
+func AuditLog(ctxt string, event models.AppEvent, dbprovider dbprovider.DbInterface) error {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_CLUSTERS)
@@ -43,7 +35,7 @@ func AuditLog(event models.AppEvent, dbprovider dbprovider.DbInterface) error {
 	if event.Notify {
 		subject, body, err := getMailDetails(event)
 		if err != nil {
-			logger.Get().Error("Could not get mail details for event: %s", event.Name)
+			logger.Get().Error("%s-Could not get mail details for event: %s", ctxt, event.Name)
 		} else {
 			if err = notifier.MailNotify(subject, body, dbprovider, ctxt); err == nil {
 				event.Notified = true

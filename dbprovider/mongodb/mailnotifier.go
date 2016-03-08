@@ -25,12 +25,12 @@ var (
 )
 
 // User returns the Mail notifier.
-func (m MongoDb) MailNotifier() (models.MailNotifier, error) {
+func (m MongoDb) MailNotifier(ctxt string) (models.MailNotifier, error) {
 	c := m.Connect(models.COLL_NAME_MAIL_NOTIFIER)
 	defer m.Close(c)
 	var notifier []models.MailNotifier
 	if err := c.Find(nil).All(&notifier); err != nil || len(notifier) == 0 {
-		logger.Get().Error("Unable to read MailNotifier from DB: %v", err)
+		logger.Get().Error("%s-Unable to read MailNotifier from DB: %v", ctxt, err)
 		return models.MailNotifier{}, ErrMissingNotifier
 	} else {
 		return notifier[0], nil
@@ -39,12 +39,12 @@ func (m MongoDb) MailNotifier() (models.MailNotifier, error) {
 
 // Save mail notifier adds a new mail notifier, it replaces the existing one if there
 // is already a notifier available.
-func (m MongoDb) SaveMailNotifier(notifier models.MailNotifier) error {
+func (m MongoDb) SaveMailNotifier(ctxt string, notifier models.MailNotifier) error {
 	c := m.Connect(models.COLL_NAME_MAIL_NOTIFIER)
 	defer m.Close(c)
 	_, err := c.Upsert(bson.M{}, bson.M{"$set": notifier})
 	if err != nil {
-		logger.Get().Error("Error Updating the mail notifier info for: %s Error: %v", notifier.MailId, err)
+		logger.Get().Error("%s-Error Updating the mail notifier info for: %s Error: %v", ctxt, notifier.MailId, err)
 		return errors.New(fmt.Sprintf("Error Updating the mail notifier info for: %s Error: %v", notifier.MailId, err))
 	}
 	return nil

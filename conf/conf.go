@@ -87,11 +87,11 @@ var (
 func LoadAppConfiguration(configFilePath string) {
 	file, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
-		logger.Get().Critical("Error Reading SkyRing Config. error: %v", err)
+		logger.Get().Critical("Error reading skyring config. error: %v", err)
 	}
 	err = json.Unmarshal(file, &SystemConfig)
 	if err != nil {
-		logger.Get().Critical("Error Unmarshalling SkyRing Config. error: %v", err)
+		logger.Get().Critical("Error unmarshalling skyring config. error: %v", err)
 	}
 	//Initialize the Provisioner Map
 	SystemConfig.Provisioners = make(map[string]ProvisionerConfig)

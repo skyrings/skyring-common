@@ -5,9 +5,9 @@ import (
 )
 
 type StorageProfileInterface interface {
-	StorageProfile(name string) (sProfile models.StorageProfile, e error)
-	StorageProfiles(query interface{}, ops models.QueryOps) (sProfiles []models.StorageProfile, e error)
-	SaveStorageProfile(s models.StorageProfile) error
-	DeleteStorageProfile(name string) error
-	InitStorageProfile() error
+	StorageProfile(ctxt string, name string) (sProfile models.StorageProfile, e error)
+	StorageProfiles(ctxt string, query interface{}, ops models.QueryOps) (sProfiles []models.StorageProfile, e error)
+	SaveStorageProfile(ctxt string, s models.StorageProfile) error
+	DeleteStorageProfile(ctxt string, name string) error
+	InitStorageProfile(ctxt string) error
 }

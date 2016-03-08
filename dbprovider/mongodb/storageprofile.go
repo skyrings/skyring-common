@@ -19,57 +19,57 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (m MongoDb) StorageProfile(name string) (sProfile models.StorageProfile, e error) {
+func (m MongoDb) StorageProfile(ctxt string, name string) (sProfile models.StorageProfile, e error) {
 
 	c := m.Connect(models.COLL_NAME_STORAGE_PROFILE)
 	defer m.Close(c)
 	err := c.Find(bson.M{"name": name}).One(&sProfile)
 	if err != nil {
-		logger.Get().Error("Error getting record from DB:%s", err)
+		logger.Get().Error("%s-Error getting record from DB:%s", ctxt, err)
 		return sProfile, mkmgoerror(err.Error())
 	}
 	return sProfile, nil
 }
 
-func (m MongoDb) StorageProfiles(filter interface{}, ops models.QueryOps) (sProfiles []models.StorageProfile, e error) {
+func (m MongoDb) StorageProfiles(ctxt string, filter interface{}, ops models.QueryOps) (sProfiles []models.StorageProfile, e error) {
 
 	c := m.Connect(models.COLL_NAME_STORAGE_PROFILE)
 	defer m.Close(c)
 
 	err := c.Find(filter).Sort("priority").Select(ops.Select).All(&sProfiles)
 	if err != nil {
-		logger.Get().Error("Error getting record from DB:%s", err)
+		logger.Get().Error("%s-Error getting record from DB:%s", ctxt, err)
 		return sProfiles, mkmgoerror(err.Error())
 	}
 	return sProfiles, nil
 
 }
 
-func (m MongoDb) SaveStorageProfile(s models.StorageProfile) error {
+func (m MongoDb) SaveStorageProfile(ctxt string, s models.StorageProfile) error {
 	c := m.Connect(models.COLL_NAME_STORAGE_PROFILE)
 	defer m.Close(c)
 
 	_, err := c.Upsert(bson.M{"name": s.Name}, bson.M{"$set": s})
 	if err != nil {
-		logger.Get().Error("Error deleting record from DB:%s", err)
+		logger.Get().Error("%s-Error deleting record from DB:%s", ctxt, err)
 		return mkmgoerror(err.Error())
 	}
 	return nil
 
 }
-func (m MongoDb) DeleteStorageProfile(name string) error {
+func (m MongoDb) DeleteStorageProfile(ctxt string, name string) error {
 	c := m.Connect(models.COLL_NAME_STORAGE_PROFILE)
 	defer m.Close(c)
 
 	err := c.Remove(bson.M{"name": name})
 	if err != nil {
-		logger.Get().Error("Error deleting record from DB:%s", err)
+		logger.Get().Error("%s-Error deleting record from DB:%s", ctxt, err)
 		return mkmgoerror(err.Error())
 	}
 	return nil
 }
 
-func (m MongoDb) InitStorageProfile() error {
+func (m MongoDb) InitStorageProfile(ctxt string) error {
 	//Set the indexes for storage profiles
 	s := m.Connect(models.COLL_NAME_STORAGE_PROFILE)
 	defer s.Database.Session.Close()
@@ -80,7 +80,7 @@ func (m MongoDb) InitStorageProfile() error {
 	}
 	err := s.EnsureIndex(profileIndex)
 	if err != nil {
-		logger.Get().Error("Error Initializing storage profile:%s", err)
+		logger.Get().Error("%s-Error Initializing storage profile:%s", ctxt, err)
 		return mkmgoerror(err.Error())
 	}
 	return nil

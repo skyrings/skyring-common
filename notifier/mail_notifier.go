@@ -108,23 +108,23 @@ func sendMail(from string, to []string, msg []byte) error {
 	return nil
 }
 
-func getNotifier(dbProvider dbprovider.DbInterface) (models.MailNotifier, error) {
+func getNotifier(ctxt string, dbProvider dbprovider.DbInterface) (models.MailNotifier, error) {
 	var notifier models.MailNotifier
-	notifier, err := dbProvider.MailNotifierInterface().MailNotifier()
+	notifier, err := dbProvider.MailNotifierInterface().MailNotifier(ctxt)
 	if err != nil {
-		logger.Get().Warning("Unable to read MailNotifier from DB: %v", err)
+		logger.Get().Warning("%s-Unable to read MailNotifier from DB: %v", ctxt, err)
 		return notifier, err
 	} else {
 		return notifier, nil
 	}
 }
 
-func getMailRecepients(dbProvider dbprovider.DbInterface) ([]string, error) {
+func getMailRecepients(ctxt string, dbProvider dbprovider.DbInterface) ([]string, error) {
 	var users []models.User
 	var recepients []string
 	users, err := dbProvider.UserInterface().Users(bson.M{"notificationenabled": true})
 	if err != nil {
-		logger.Get().Critical(fmt.Sprintf("Could not retrieve the list of users from DB. Error: %v", err))
+		logger.Get().Critical(fmt.Sprintf("%s-Could not retrieve the list of users from DB. Error: %v", ctxt, err))
 		return recepients, err
 	}
 	for _, user := range users {
@@ -150,13 +150,13 @@ func SetMailClient(notifier models.MailNotifier, ctxt string) error {
 }
 
 func MailNotify(subject string, body string, dbProvider dbprovider.DbInterface, ctxt string) error {
-	notifier, err := getNotifier(dbProvider)
+	notifier, err := getNotifier(ctxt, dbProvider)
 	if err != nil {
 		logger.Get().Warning("%s-Could not Get the notifier. Error: %v", ctxt, err)
 		return errors.New(fmt.Sprintf("Could not Get the notifier. Error: %v", err))
 	}
 
-	recepients, err := getMailRecepients(dbProvider)
+	recepients, err := getMailRecepients(ctxt, dbProvider)
 	if err != nil || len(recepients) == 0 {
 		logger.Get().Warning("%s-Could not Get any recepients. Error: %v", ctxt, err)
 		return errors.New(fmt.Sprintf("Could not Get any recepients. Error: %v", err))
