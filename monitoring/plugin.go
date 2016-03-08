@@ -43,6 +43,12 @@ const (
 	TOTAL                       = "total"
 	FREE                        = "free"
 	NETWORK_LATENCY             = "network_latency"
+	INTERFACE                   = "interface"
+	AGGREGATION                 = "aggregation_"
+	OCTETS                      = "octets"
+	RX                          = "rx"
+	TX                          = "tx"
+	LOOP_BACK_INTERFACE         = "interface-lo"
 )
 
 var (

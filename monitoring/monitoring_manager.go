@@ -23,6 +23,7 @@ var GeneralResources = []string{
 	NO_OF_OBJECT,
 	PG_SUMMARY,
 	"ping",
+	"interface",
 }
 
 var (

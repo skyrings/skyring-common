@@ -9,6 +9,7 @@ import (
 	"github.com/skyrings/skyring-common/monitoring"
 	"github.com/skyrings/skyring-common/utils"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -103,6 +104,10 @@ func GetTemplateParsedString(urlParams map[string]interface{}, templateString st
 var resourceCollectionNameMapper = map[string]string{
 	monitoring.NETWORK_LATENCY: "ping.ping-{{.serverName}}",
 	monitoring.CPU_USER:        "cpu.percent-user",
+	monitoring.AGGREGATION + monitoring.INTERFACE + monitoring.OCTETS + monitoring.RX: "interface*.if_octets.rx",
+	monitoring.AGGREGATION + monitoring.INTERFACE + monitoring.OCTETS + monitoring.TX: "interface*.if_octets.tx",
+	monitoring.AGGREGATION + monitoring.DISK + monitoring.READ:                        "disk-*.disk_ops.read",
+	monitoring.AGGREGATION + monitoring.DISK + monitoring.WRITE:                       "disk-*.disk_ops.write",
 }
 
 func (tsdbm GraphiteManager) GetResourceName(params map[string]interface{}) (string, error) {
@@ -310,25 +315,93 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 }
 
 func (tsdbm GraphiteManager) GetInstantValue(node string, resource_name string) (float64, error) {
+	node = strings.Replace(node, ".", "_", -1)
 	paramsToQuery := map[string]interface{}{"nodename": node, "resource": resource_name, "interval": monitoring.Latest}
 	mStats, memoryStatsFetchError := tsdbm.QueryDB(paramsToQuery)
 	if memoryStatsFetchError != nil {
-		return 0, fmt.Errorf("Failed to fetch instant memory statistics for %s.Error: %v", node, memoryStatsFetchError)
+		return 0, fmt.Errorf("Failed to fetch instant %v statistics for %s.Error: %v", resource_name, node, memoryStatsFetchError)
 	}
 	metrics, ok := mStats.([]GraphiteMetric)
 	if !ok || len(metrics) != 1 {
-		return 0, fmt.Errorf("Failed to get the instant stat from %v", mStats)
+		return 0, fmt.Errorf("Failed to get the instant stat of %v resource of %v", resource_name, node)
 	}
 	statistics := []stat(metrics[0].Stats)
 	timeStampValueArr := []interface{}(statistics[0])
 	if !ok {
-		return 0.0, fmt.Errorf("Failed to get the instant stat from %v", timeStampValueArr)
+		return 0.0, fmt.Errorf("Failed to get the instant stat of %v resource of %v", resource_name, node)
 	}
 	value, ok := timeStampValueArr[0].(string)
 	if !ok {
-		return 0.0, fmt.Errorf("Failed to get the instant stat from %v", timeStampValueArr)
+		return 0.0, fmt.Errorf("Failed to get the instant stat of %v resource of %v", resource_name, node)
 	}
-	return strconv.ParseFloat(value, 64)
+	fVal, fValErr := strconv.ParseFloat(value, 64)
+	if fValErr != nil {
+		return 0.0, fmt.Errorf("The value %v is not a number.Err %v", fValErr)
+	}
+	if math.IsNaN(fVal) {
+		return 0.0, fmt.Errorf("The value %v from resource %v of %v is not a number", fVal, resource_name, node)
+	}
+	return fVal, nil
+}
+
+func isSeriesException(seriesName string, exceptionResources []string, node string) bool {
+	for _, eResource := range exceptionResources {
+		if strings.HasPrefix(seriesName, conf.SystemConfig.TimeSeriesDBConfig.CollectionName+"."+node+"."+eResource+".") {
+			return true
+		}
+	}
+	return false
+}
+
+func (tsdbm GraphiteManager) GetInstantValuesAggregation(node string, resource_name string, exceptionResources []string) (aggregatedValue float64, err error, isCompleteFailure bool) {
+	var err_str string
+	node = strings.Replace(node, ".", "_", -1)
+	paramsToQuery := map[string]interface{}{"nodename": node, "resource": resource_name, "interval": monitoring.Latest}
+	mStats, mStatsFetchError := tsdbm.QueryDB(paramsToQuery)
+	if mStatsFetchError != nil {
+		return 0, fmt.Errorf("Failed to fetch instant %v statistics for %s.Error: %v", resource_name, node, mStatsFetchError), true
+	}
+	metrics, ok := mStats.([]GraphiteMetric)
+	if !ok || len(metrics) == 0 {
+		return 0, fmt.Errorf("Failed to get the instant stat of %v resource of %v", resource_name, node), true
+	}
+	metric_cnt := len(metrics)
+	for _, metric := range metrics {
+		if !isSeriesException(metric.Target, exceptionResources, node) {
+			statistics := []stat(metric.Stats)
+			timeStampValueArr := []interface{}(statistics[0])
+			if !ok {
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				// Decrement metric_cnt for average as the current node is not contributing.
+				metric_cnt = metric_cnt - 1
+				continue
+			}
+			value, ok := timeStampValueArr[0].(string)
+			if !ok {
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				// Decrement metric_cnt for average as the current node is not contributing.
+				metric_cnt = metric_cnt - 1
+				continue
+			}
+			val, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				// Decrement metric_cnt for average as the current node is not contributing.
+				metric_cnt = metric_cnt - 1
+				continue
+			}
+			if !math.IsNaN(val) {
+				aggregatedValue = aggregatedValue + val
+			}
+		} else {
+			//The series is in exception list and need not be counted for averaging out.
+			metric_cnt = metric_cnt - 1
+		}
+	}
+	if err_str != "" {
+		return aggregatedValue / float64(metric_cnt), fmt.Errorf("%v", strings.TrimSpace(err_str)), metric_cnt == 0
+	}
+	return aggregatedValue / float64(metric_cnt), nil, metric_cnt == 0
 }
 
 //This method takes map[string]map[string]string ==> map[metric/table name]map[timestamp]value
