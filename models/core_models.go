@@ -154,20 +154,20 @@ type ClusterNetworks struct {
 }
 
 type StorageLogicalUnit struct {
-	SluId             uuid.UUID         `json:"sluid"`
-	Name              string            `json:"name"`
-	Type              int               `json:"type"`
-	ClusterId         uuid.UUID         `json:"clusterid"`
-	NodeId            uuid.UUID         `json:"nodeid"`
-	StorageId         uuid.UUID         `json:"storageid"`
-	StorageDeviceId   uuid.UUID         `json:"storagedeviceid"`
-	StorageDeviceSize uint64            `json:"storagedevicesize"`
-	Status            SluStatus         `json:"status"`
-	Options           map[string]string `json:"options"`
-	StorageProfile    string            `json:"storageprofile"`
-	State             string            `json:"state"`
-	AlmStatus         AlarmStatus       `json:"almstatus"`
-	AlmCount          int               `json:"almcount"`
+	SluId             uuid.UUID              `json:"sluid"`
+	Name              string                 `json:"name"`
+	Type              int                    `json:"type"`
+	ClusterId         uuid.UUID              `json:"clusterid"`
+	NodeId            uuid.UUID              `json:"nodeid"`
+	StorageId         uuid.UUID              `json:"storageid"`
+	StorageDeviceId   uuid.UUID              `json:"storagedeviceid"`
+	StorageDeviceSize uint64                 `json:"storagedevicesize"`
+	Status            SluStatus              `json:"status"`
+	Options           map[string]interface{} `json:"options"`
+	StorageProfile    string                 `json:"storageprofile"`
+	State             string                 `json:"state"`
+	AlmStatus         AlarmStatus            `json:"almstatus"`
+	AlmCount          int                    `json:"almcount"`
 }
 
 type Storage struct {
