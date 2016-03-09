@@ -29,8 +29,8 @@ import (
 type Task struct {
 	Mutex            *sync.Mutex
 	ID               uuid.UUID
+	Owner            string
 	Name             string
-	Timeout          time.Duration
 	Tag              map[string]string
 	Started          bool
 	Completed        bool
@@ -45,7 +45,7 @@ type Task struct {
 }
 
 func (t Task) String() string {
-	return fmt.Sprintf("Task{ID=%s, Name=%s, Started=%t, Completed=%t}", t.ID, t.Name, t.Started, t.Completed)
+	return fmt.Sprintf("Task{Owner=%s,ID=%s, Name=%s, Started=%t, Completed=%t}", t.Owner, t.ID, t.Name, t.Started, t.Completed)
 }
 
 func (t *Task) UpdateStatus(format string, args ...interface{}) {
@@ -59,7 +59,7 @@ func (t *Task) UpdateStatus(format string, args ...interface{}) {
 		return
 	}
 	t.StatusList = append(t.StatusList, s)
-	t.UpdateStatusList(t.StatusList)
+	t.UpdateStatusList(t.StatusList, t.LastUpdated)
 	if t.StatusCbkFunc != nil {
 		go t.StatusCbkFunc(t, &s)
 	}
@@ -89,7 +89,7 @@ func (t *Task) Done(status models.TaskStatus) {
 	close(t.DoneCh)
 	t.Completed = true
 	t.LastUpdated = time.Now()
-	t.UpdateTaskCompleted(t.Completed, status)
+	t.UpdateTaskCompleted(t.Completed, status, t.LastUpdated)
 }
 
 func (t *Task) IsDone() bool {
@@ -119,6 +119,7 @@ func (t *Task) Persist() (bool, error) {
 	appTask.Completed = t.Completed
 	appTask.StatusList = t.StatusList
 	appTask.Tag = t.Tag
+	appTask.Owner = t.Owner
 
 	if err := coll.Insert(appTask); err != nil {
 		logger.Get().Error("Error persisting task: %v. error: %v", t.ID, err)
@@ -128,11 +129,11 @@ func (t *Task) Persist() (bool, error) {
 	return true, nil
 }
 
-func (t *Task) UpdateStatusList(status []models.Status) (bool, error) {
+func (t *Task) UpdateStatusList(status []models.Status, lastUpdated time.Time) (bool, error) {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
-	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"statuslist": status, "lastupdated": t.LastUpdated}}); err != nil {
+	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"statuslist": status, "lastupdated": lastUpdated}}); err != nil {
 		logger.Get().Error("Error updating status list for task: %v. error: %v", t.ID, err)
 		return false, err
 	}
@@ -140,11 +141,11 @@ func (t *Task) UpdateStatusList(status []models.Status) (bool, error) {
 	return true, nil
 }
 
-func (t *Task) UpdateTaskCompleted(b bool, status models.TaskStatus) (bool, error) {
+func (t *Task) UpdateTaskCompleted(b bool, status models.TaskStatus, lastUpdated time.Time) (bool, error) {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
-	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"completed": b, "status": status, "lastupdated": t.LastUpdated}}); err != nil {
+	if err := coll.Update(bson.M{"id": t.ID}, bson.M{"$set": bson.M{"completed": b, "status": status, "lastupdated": lastUpdated}}); err != nil {
 		logger.Get().Error("Error updating status of task: %v. error: %v", t.ID, err)
 		return false, err
 	}

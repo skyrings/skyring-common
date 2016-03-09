@@ -225,6 +225,7 @@ type Status struct {
 type AppTask struct {
 	Id          uuid.UUID         `json:"id"`
 	Name        string            `json:"name"`
+	Owner       string            `json:"owner"`
 	ParentId    uuid.UUID         `json:"parentid"`
 	Started     bool              `json:"started"`
 	Completed   bool              `json:"completed"`

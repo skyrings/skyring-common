@@ -24,19 +24,19 @@ import (
 	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 	"sync"
-	"time"
 )
 
 type Manager struct {
+	tasks map[uuid.UUID]*Task
 }
 
-func (manager *Manager) Run(name string, f func(t *Task), tOut time.Duration, startedFunc func(t *Task), completedFunc func(t *Task), statusFunc func(t *Task, s *models.Status)) (uuid.UUID, error) {
+func (manager *Manager) Run(owner string, name string, f func(t *Task), startedFunc func(t *Task), completedFunc func(t *Task), statusFunc func(t *Task, s *models.Status)) (uuid.UUID, error) {
 	if id, err := uuid.New(); err == nil {
 		task := Task{
 			Mutex:            &sync.Mutex{},
 			ID:               *id,
+			Owner:            owner,
 			Name:             name,
-			Timeout:          tOut,
 			DoneCh:           make(chan bool, 1),
 			StatusList:       []models.Status{},
 			StopCh:           make(chan bool, 0),
@@ -46,12 +46,14 @@ func (manager *Manager) Run(name string, f func(t *Task), tOut time.Duration, st
 			StatusCbkFunc:    statusFunc,
 		}
 		task.Run()
+		manager.tasks[*id] = &task
 		go func() {
 			select {
 			case <-task.DoneCh:
+				delete(manager.tasks, task.ID)
 				return
-			case <-time.After(task.Timeout):
-				task.UpdateStatus("Timeout. Task: %v timed out.", task.ID)
+			case <-task.StopCh:
+				task.UpdateStatus("Force Stop. Task: %v explicitly stopped.", task.ID)
 				task.Done(models.TASK_STATUS_TIMED_OUT)
 				task.StopCh <- true
 				return
@@ -106,10 +108,20 @@ func (manager *Manager) GetStatus(id uuid.UUID) (status []models.Status, err err
 }
 
 func (manager *Manager) Remove(id uuid.UUID) {
+	delete(manager.tasks, id)
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_TASKS)
 	_ = coll.Remove(bson.M{"id": id})
+}
+
+func (manager *Manager) Stop(id uuid.UUID) (bool, error) {
+	if task, ok := manager.tasks[id]; ok {
+		task.StopCh <- true
+		return true, nil
+	} else {
+		return false, fmt.Errorf("Failed to stop task: %v", id)
+	}
 }
 
 func (manager *Manager) List() []uuid.UUID {
@@ -128,5 +140,5 @@ func (manager *Manager) List() []uuid.UUID {
 }
 
 func NewManager() Manager {
-	return Manager{}
+	return Manager{make(map[uuid.UUID]*Task)}
 }
