@@ -12,7 +12,11 @@ limitations under the License.
 */
 package provisioner
 
+import (
+	"github.com/skyrings/skyring-common/models"
+)
+
 type Provisioner interface {
-	Install(role string, hosts []string) error
-	Configure(role string, data map[string]interface{}) error
+	Install(ctxt string, nodes []models.ClusterNode) []models.ClusterNode
+	Configure(ctxt string, reqType string, data map[string]interface{}) error
 }

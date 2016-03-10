@@ -21,7 +21,33 @@ var (
 
 func (c *CephInstaller) LoadRoutes() {
 
-	var routes = []models.ApiRoute{}
+	var routes = []models.ApiRoute{
+		{
+			Name:    "monInstall",
+			Pattern: "mon/install",
+			Method:  "POST",
+		},
+		{
+			Name:    "monConfigure",
+			Pattern: "mon/configure",
+			Method:  "POST",
+		},
+		{
+			Name:    "osdInstall",
+			Pattern: "osd/install",
+			Method:  "POST",
+		},
+		{
+			Name:    "osdConfigure",
+			Pattern: "osd/configure",
+			Method:  "POST",
+		},
+		{
+			Name:    "taskStatus",
+			Pattern: "tasks/{id}",
+			Method:  "GET",
+		},
+	}
 
 	for _, route := range routes {
 		CEPH_INSTALLER_API_ROUTES[route.Name] = route

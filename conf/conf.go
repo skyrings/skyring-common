@@ -39,6 +39,8 @@ type AuthConfig struct {
 type ProvisionerConfig struct {
 	ProvisionerName string `json:"provisionername"`
 	ConfigFilePath  string `json:"configfilepath"`
+	RedhatStorage   bool   `json:"redhatstorage"`
+	RedhatUseCdn    bool   `json:"redhatusecdn"`
 }
 
 type SkyringCollection struct {

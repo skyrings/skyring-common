@@ -3,10 +3,15 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"github.com/skyrings/skyring-common/conf"
+	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
 	"github.com/skyrings/skyring-common/tools/task"
+	"github.com/skyrings/skyring-common/tools/uuid"
+	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -159,4 +164,51 @@ func StringSetDiff(keys1 []string, keys2 []string) (diff []string) {
 		}
 	}
 	return diff
+}
+
+func StringInSlice(value string, slice []string) bool {
+	for _, item := range slice {
+		if value == item {
+			return true
+		}
+	}
+	return false
+}
+
+func GetNodes(clusterNodes []models.ClusterNode) (map[uuid.UUID]models.Node, error) {
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	var nodes = make(map[uuid.UUID]models.Node)
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_NODES)
+	for _, clusterNode := range clusterNodes {
+		uuid, err := uuid.Parse(clusterNode.NodeId)
+		if err != nil {
+			return nodes, errors.New(fmt.Sprintf("Error parsing node id: %v", clusterNode.NodeId))
+		}
+		var node models.Node
+		if err := coll.Find(bson.M{"nodeid": *uuid}).One(&node); err != nil {
+			return nodes, err
+		}
+		nodes[node.NodeId] = node
+	}
+	return nodes, nil
+}
+
+func GetNodesByIdStr(clusterNodes []models.ClusterNode) (map[string]models.Node, error) {
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	var nodes = make(map[string]models.Node)
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_NODES)
+	for _, clusterNode := range clusterNodes {
+		uuid, err := uuid.Parse(clusterNode.NodeId)
+		if err != nil {
+			return nodes, errors.New(fmt.Sprintf("Error parsing node id: %v", clusterNode.NodeId))
+		}
+		var node models.Node
+		if err := coll.Find(bson.M{"nodeid": *uuid}).One(&node); err != nil {
+			return nodes, err
+		}
+		nodes[clusterNode.NodeId] = node
+	}
+	return nodes, nil
 }
