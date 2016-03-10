@@ -30,8 +30,9 @@ type Route struct {
 }
 
 type ProviderConfig struct {
-	Name           string `json:"name"`
-	ProviderBinary string `json:"binary"`
+	Name           string  `json:"name"`
+	ProviderBinary string  `json:"binary"`
+	CompatVersion  float64 `json:"compatible_version"`
 }
 
 type ProviderInfo struct {

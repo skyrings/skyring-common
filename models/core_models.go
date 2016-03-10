@@ -166,7 +166,7 @@ type StorageLogicalUnit struct {
 	Type              int                    `json:"type"`
 	ClusterId         uuid.UUID              `json:"clusterid"`
 	NodeId            uuid.UUID              `json:"nodeid"`
-	StorageId         uuid.UUID              `json:"storageid"`
+	StorageIds        []uuid.UUID            `json:"storageid"`
 	StorageDeviceId   uuid.UUID              `json:"storagedeviceid"`
 	StorageDeviceSize uint64                 `json:"storagedevicesize"`
 	Status            SluStatus              `json:"status"`

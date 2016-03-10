@@ -40,7 +40,13 @@ type AddClusterRequest struct {
 	MonitoringPlugins  []monitoring.Plugin    `json:"monitoringplugins"`
 	MonitoringInterval int                    `json:"monitoringinterval"`
 	DisableAutoExpand  bool                   `json:"disableautoexpand"`
-	JournalSize        string                 `json:"journalsize"`
+	JournalSize        string                 `json:"journalSize"`
+}
+
+type ImportClusterRequest struct {
+	BootstrapNode string   `json:"bootstrapnode"`
+	ClusterType   string   `json:"type"`
+	Nodes         []string `json:"nodes"`
 }
 
 type ClusterSummary struct {
@@ -194,6 +200,20 @@ type ApiRoute struct {
 	Pattern string
 	Method  string
 	Version int
+}
+
+type ClusterForImport struct {
+	ClusterName string          `json:"clustername"`
+	ClusterId   uuid.UUID       `json:"clusterid"`
+	Version     string          `json:"version"`
+	Compatible  bool            `json:"compatible"`
+	Nodes       []NodeForImport `json:"nodes"`
+}
+
+type NodeForImport struct {
+	Name  string   `json:"name"`
+	Type  []string `json:"type"`
+	Found bool     `json:"found"`
 }
 
 const (
@@ -363,6 +383,7 @@ const (
 	NODE_STATE_ACTIVE
 	NODE_STATE_FAILED
 	NODE_STATE_UNMANAGED
+	NODE_STATE_IMPORTING
 )
 
 var NodeStates = [...]string{
@@ -371,6 +392,7 @@ var NodeStates = [...]string{
 	"active",
 	"failed",
 	"unmanaged",
+	"importing",
 }
 
 const (
