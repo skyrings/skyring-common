@@ -20,6 +20,7 @@ type PluginConfig struct {
 const (
 	CLUSTER_UTILIZATION         = "cluster_utilization"
 	SLU_UTILIZATION             = "slu_utilization"
+	STORAGE_UTILIZATION         = "storage_utilization"
 	FREE_SPACE                  = "free_bytes"
 	USED_SPACE                  = "used_bytes"
 	TOTAL_SPACE                 = "total_bytes"
@@ -49,11 +50,15 @@ const (
 	RX                          = "rx"
 	TX                          = "tx"
 	LOOP_BACK_INTERFACE         = "interface-lo"
+	CRITICAL                    = "critical"
+	WARN                        = "warn"
+	OK                          = "ok"
+	THRESHOLD                   = "threshold"
 )
 
 var (
 	SupportedConfigCategories = []string{
-		"threshold",
+		THRESHOLD,
 		"interval",
 		"miscellaneous",
 	}

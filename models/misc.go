@@ -453,4 +453,13 @@ var StorageStatuses = [...]string{
 	"unknown",
 }
 
+const (
+	CURRENT_VALUE   = "CurrentValue"
+	CLUSTER_ID      = "ClusterId"
+	ENTITY_ID       = "EntityId"
+	PLUGIN          = "Plugin"
+	THRESHOLD_TYPE  = "ThresholdType"
+	THRESHOLD_VALUE = "ThresholdValue"
+)
+
 func (s StorageStatus) String() string { return StorageStatuses[s] }
