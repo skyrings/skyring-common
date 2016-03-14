@@ -168,6 +168,7 @@ type StorageLogicalUnit struct {
 	State             string                 `json:"state"`
 	AlmStatus         AlarmStatus            `json:"almstatus"`
 	AlmCount          int                    `json:"almcount"`
+	Usage             Utilization            `json:"usage"`
 }
 
 type Storage struct {
