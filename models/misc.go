@@ -144,9 +144,12 @@ type AppEvent struct {
 	Severity           AlarmStatus        `json:"severity"`
 	CorrelationId      uuid.UUID          `json:"correlationid"`
 	Acked              bool               `json:"acked"`
-	AckedTime          time.Time          `json:"ackedtime"`
-	AckedBy            string             `json:"ackedby"`
-	AckComment         string             `json:"ackcomment"`
+	UserAckedTime      time.Time          `json:"userackedtime"`
+	SystemAckedTime    time.Time          `json:"systemackedtime"`
+	AckedByUser        string             `json:"ackedbyuser"`
+	AckedByEvent       string             `json:"ackedbyevent"`
+	UserAckComment     string             `json:"userackcomment"`
+	SystemAckComment   string             `json:"systemackcomment"`
 	Notify             bool               `json:"notify"`
 	Notified           bool               `json:"notified"`
 }
