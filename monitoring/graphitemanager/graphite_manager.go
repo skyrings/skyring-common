@@ -336,7 +336,7 @@ func (tsdbm GraphiteManager) GetInstantValue(node string, resource_name string) 
 	}
 	fVal, fValErr := strconv.ParseFloat(value, 64)
 	if fValErr != nil {
-		return 0.0, fmt.Errorf("The value %v is not a number.Err %v", fValErr)
+		return 0.0, fmt.Errorf("The value %v is not a number.Err %v", fVal, fValErr)
 	}
 	if math.IsNaN(fVal) {
 		return 0.0, fmt.Errorf("The value %v from resource %v of %v is not a number", fVal, resource_name, node)
