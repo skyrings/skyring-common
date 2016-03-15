@@ -28,8 +28,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	bigfin_conf "github.com/skyrings/bigfin/conf"
 )
 
 type CephInstaller struct {
@@ -110,7 +108,7 @@ func (c CephInstaller) Install(ctxt string, nodes []models.ClusterNode) []models
 			resp, body, errs := httprequest.Post(formUrl(route)).SendStruct(data).End()*/
 			data := make(map[string]interface{})
 			data["hosts"] = hosts
-			data["redhat_storage"] = conf.SystemConfig.Provisioners[bigfin_conf.ProviderName].RedhatStorage
+			data["redhat_storage"] = conf.SystemConfig.Provisioners["ceph"].RedhatStorage
 			jsonString, err := json.Marshal(data)
 			if err != nil {
 				logger.Get().Error("%s-Error marshalling data: %v", ctxt, err)
