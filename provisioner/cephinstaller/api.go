@@ -22,6 +22,7 @@ import (
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/provisioner"
 	"github.com/skyrings/skyring-common/tools/logger"
+	"github.com/skyrings/skyring-common/tools/task"
 	"github.com/skyrings/skyring-common/utils"
 	"io"
 	"net/http"
@@ -73,7 +74,7 @@ func New(config io.Reader) (*CephInstaller, error) {
 	return installer, nil
 }
 
-func (c CephInstaller) Install(ctxt string, nodes []models.ClusterNode) []models.ClusterNode {
+func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, nodes []models.ClusterNode) []models.ClusterNode {
 
 	db_nodes, err := util.GetNodesByIdStr(nodes)
 	if err != nil {
@@ -103,12 +104,12 @@ func (c CephInstaller) Install(ctxt string, nodes []models.ClusterNode) []models
 				available
 			*/
 			/*data := InstallReq{Hosts: hosts,
-				RedhatStorage: conf.SystemConfig.Provisioners[bigfin_conf.ProviderName].RedhatStorage,
-				RedhatUseCdn:  conf.SystemConfig.Provisioners[bigfin_conf.ProviderName].RedhatUseCdn}
+				RedhatStorage: conf.SystemConfig.Provisioners[providerName].RedhatStorage,
+				RedhatUseCdn:  conf.SystemConfig.Provisioners[providerName].RedhatUseCdn}
 			resp, body, errs := httprequest.Post(formUrl(route)).SendStruct(data).End()*/
 			data := make(map[string]interface{})
 			data["hosts"] = hosts
-			data["redhat_storage"] = conf.SystemConfig.Provisioners["ceph"].RedhatStorage
+			data["redhat_storage"] = conf.SystemConfig.Provisioners[providerName].RedhatStorage
 			jsonString, err := json.Marshal(data)
 			if err != nil {
 				logger.Get().Error("%s-Error marshalling data: %v", ctxt, err)
@@ -128,14 +129,14 @@ func (c CephInstaller) Install(ctxt string, nodes []models.ClusterNode) []models
 				failedNodes = append(failedNodes, node)
 				return
 			}
-
+			t.UpdateStatus("Installed packages on %s:", hostname)
 		}(node, db_nodes[node.NodeId].Hostname)
 	}
 	wg.Wait()
 
 	return failedNodes
 }
-func (c CephInstaller) Configure(ctxt string, reqType string, data map[string]interface{}) error {
+func (c CephInstaller) Configure(ctxt string, t *task.Task, reqType string, data map[string]interface{}) error {
 	var (
 		resp  *http.Response
 		body  string

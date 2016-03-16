@@ -14,9 +14,10 @@ package provisioner
 
 import (
 	"github.com/skyrings/skyring-common/models"
+	"github.com/skyrings/skyring-common/tools/task"
 )
 
 type Provisioner interface {
-	Install(ctxt string, nodes []models.ClusterNode) []models.ClusterNode
-	Configure(ctxt string, reqType string, data map[string]interface{}) error
+	Install(ctxt string, t *task.Task, providerName string, nodes []models.ClusterNode) []models.ClusterNode
+	Configure(ctxt string, t *task.Task, reqType string, data map[string]interface{}) error
 }
