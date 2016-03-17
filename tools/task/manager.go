@@ -26,6 +26,10 @@ import (
 	"sync"
 )
 
+var (
+	TaskManager Manager
+)
+
 type Manager struct {
 	tasks map[uuid.UUID]*Task
 }
@@ -50,7 +54,6 @@ func (manager *Manager) Run(owner string, name string, f func(t *Task), startedF
 		go func() {
 			select {
 			case <-task.DoneCh:
-				delete(manager.tasks, task.ID)
 				return
 			case <-task.StopCh:
 				task.UpdateStatus("Force Stop. Task: %v explicitly stopped.", task.ID)
@@ -140,5 +143,14 @@ func (manager *Manager) List() []uuid.UUID {
 }
 
 func NewManager() Manager {
-	return Manager{make(map[uuid.UUID]*Task)}
+	TaskManager = Manager{make(map[uuid.UUID]*Task)}
+	return TaskManager
+}
+
+func GetTaskManager() *Manager {
+	return &TaskManager
+}
+
+func (manager *Manager) RemoveTask(id uuid.UUID) {
+	delete(manager.tasks, id)
 }

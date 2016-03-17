@@ -77,7 +77,6 @@ func (t *Task) Run() {
 func (t *Task) Done(status models.TaskStatus) {
 	// Handle any panic
 	defer ignorePanic()
-
 	// If task has timed out error out smoothly
 	t.Mutex.Lock()
 	defer t.Mutex.Unlock()
@@ -90,6 +89,8 @@ func (t *Task) Done(status models.TaskStatus) {
 	t.Completed = true
 	t.LastUpdated = time.Now()
 	t.UpdateTaskCompleted(t.Completed, status, t.LastUpdated)
+	//Remove task details from Manager
+	GetTaskManager().RemoveTask(t.ID)
 }
 
 func (t *Task) IsDone() bool {
