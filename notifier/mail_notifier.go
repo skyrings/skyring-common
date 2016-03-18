@@ -25,9 +25,11 @@ import (
 	"net"
 	"net/smtp"
 	"strconv"
+	"sync"
 )
 
 var client *smtp.Client
+var clientLock sync.Mutex
 
 func setTLSMailClient(addr string, a smtp.Auth, skipVerify bool) error {
 	c, err := smtp.Dial(addr)
@@ -83,6 +85,8 @@ func setSSLMailClient(addr string, auth smtp.Auth, skipVerify bool) error {
 }
 
 func sendMail(from string, to []string, msg []byte) error {
+	clientLock.Lock()
+	defer clientLock.Unlock()
 	if err := client.Mail(from); err != nil {
 		return err
 	}
