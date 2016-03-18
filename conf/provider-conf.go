@@ -17,6 +17,8 @@ import (
 	"github.com/skyrings/skyring-common/tools/logger"
 	"io/ioutil"
 	"path"
+	"path/filepath"
+	"strings"
 )
 
 type Route struct {
@@ -58,16 +60,28 @@ func LoadProviderConfig(providerConfigDir string) []ProviderInfo {
 			logger.Get().Critical("Error reading config. error: %v", err)
 			continue
 		}
-		err = json.Unmarshal(file, &data)
-		if err != nil {
-			logger.Get().Critical("Error unmarshalling config. error: %v", err)
-			continue
+		if strings.HasSuffix(f.Name(), ".conf") {
+			err = json.Unmarshal(file, &data)
+			if err != nil {
+				logger.Get().Critical("Error unmarshalling config. error: %v", err)
+				continue
+			}
+			collection = append(collection, data)
+			SystemConfig.Provisioners[data.Provider.Name] = data.Provisioner
+			data = ProviderInfo{}
+		} else {
+			if SystemConfig.SysCapabilities.ProductName != "" {
+				provider_name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
+				version := make(map[string]string)
+				err = json.Unmarshal(file, &version)
+				if err != nil {
+					logger.Get().Critical("Error unmarshalling config. error: %v", err)
+					continue
+				}
+				SystemConfig.SysCapabilities.StorageProviderDetails[provider_name] = version["version"]
+			}
 		}
-		collection = append(collection, data)
-		SystemConfig.Provisioners[data.Provider.Name] = data.Provisioner
-		data = ProviderInfo{}
 	}
 	logger.Get().Debug("Collection: %v", collection)
 	return collection
-
 }

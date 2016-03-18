@@ -17,6 +17,11 @@ import (
 	"github.com/op/go-logging"
 	"github.com/skyrings/skyring-common/tools/logger"
 	"io/ioutil"
+	"path"
+)
+
+const(
+	aboutConfigFile = "about.conf"
 )
 
 type SkyringConfig struct {
@@ -52,6 +57,7 @@ type SkyringCollection struct {
 	Authentication       AuthConfig                   `json:"authentication"`
 	SummaryConfig        SystemSummaryConfig          `json:"summary"`
 	Provisioners         map[string]ProvisionerConfig `json:"provisioners"`
+	SysCapabilities      SystemCapabilities           `json:"systemcapabilities"`
 }
 
 type SystemSummaryConfig struct {
@@ -82,19 +88,41 @@ type NodeManagerConfig struct {
 	ConfigFilePath string `json:"configfilepath"`
 }
 
+type SystemCapabilities struct {
+	ProductName            string            `bson:"productname",json:"productname"`
+	ProductVersion         string            `bson:"productversion",json:"productversion"`
+	StorageProviderDetails map[string]string `bson:"providerversion",json:"providerversion"`
+	DbSoftware             string            `bson:"dbsoftware",json:"dbsoftware"`
+	DbSoftwareVersion      string            `bson:"dbsoftwareversion",json:"dbsoftwareversion"`
+}
+
 var (
-	SystemConfig SkyringCollection
+	SystemConfig    SkyringCollection
 )
 
-func LoadAppConfiguration(configFilePath string) {
-	file, err := ioutil.ReadFile(configFilePath)
+func LoadAppConfiguration(configFilePath string, configFile string) {
+	file, err := ioutil.ReadFile(path.Join(configFilePath, configFile))
 	if err != nil {
 		logger.Get().Critical("Error reading skyring config. error: %v", err)
+		return
 	}
 	err = json.Unmarshal(file, &SystemConfig)
 	if err != nil {
 		logger.Get().Critical("Error unmarshalling skyring config. error: %v", err)
+		return
 	}
 	//Initialize the Provisioner Map
 	SystemConfig.Provisioners = make(map[string]ProvisionerConfig)
+	//Initialize System_capabilities
+	file, err = ioutil.ReadFile(path.Join(configFilePath, aboutConfigFile))
+	if err != nil {
+		logger.Get().Critical("Error reading about config. error: %v", err)
+		return
+	}
+	err = json.Unmarshal(file, &SystemConfig.SysCapabilities)
+	if err != nil {
+		logger.Get().Critical("Error unmarshalling about config. error: %v", err)
+		return
+	}
+	SystemConfig.SysCapabilities.StorageProviderDetails = make(map[string]string)
 }

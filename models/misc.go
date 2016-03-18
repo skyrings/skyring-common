@@ -204,6 +204,7 @@ const (
 	COLL_NAME_MAIL_NOTIFIER         = "mailnotifier"
 	COLL_NAME_LDAP                  = "ldap"
 	COLL_NAME_BLOCK_DEVICES         = "block_devices"
+	COLL_NAME_SYSTEM_CAPABILITIES   = "system_capabilities"
 
 	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
