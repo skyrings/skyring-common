@@ -39,12 +39,21 @@ func ClearCorrespondingAlert(event models.AppEvent, ctxt string) error {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_APP_EVENTS)
-	if err := coll.Find(bson.M{
-		"name":      event.Name,
-		"entityid":  event.EntityId,
-		"clusterid": event.ClusterId}).Sort("-timestamp").All(&events); err != nil {
-		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
-		return err
+	count := 0
+	for count < 5 {
+		if err := coll.Find(bson.M{
+			"name":      event.Name,
+			"entityid":  event.EntityId,
+			"clusterid": event.ClusterId}).Sort("-timestamp").All(&events); err != nil {
+			logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+			return err
+		}
+		if len(events) == 0 || events[0].Severity == models.ALARM_STATUS_CLEARED {
+			time.Sleep(180 * time.Second)
+			count = count + 1
+		} else {
+			break
+		}
 	}
 	if len(events) == 0 || events[0].Severity == models.ALARM_STATUS_CLEARED {
 		logger.Get().Warning("%s-Corresponding alert not available for event: %s",
