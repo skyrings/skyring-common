@@ -18,6 +18,7 @@ type PluginConfig struct {
 }
 
 const (
+	USAGE_PERCENTAGE            = "percent-used"
 	CLUSTER_UTILIZATION         = "cluster_utilization"
 	SLU_UTILIZATION             = "slu_utilization"
 	STORAGE_UTILIZATION         = "storage_utilization"

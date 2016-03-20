@@ -7,9 +7,11 @@ import (
 	"github.com/marpaia/graphite-golang"
 	"github.com/skyrings/skyring-common/conf"
 	"github.com/skyrings/skyring-common/monitoring"
+	"github.com/skyrings/skyring-common/tools/logger"
 	"github.com/skyrings/skyring-common/utils"
 	"io"
 	"math"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -40,8 +42,8 @@ var (
 	targetGeneral           = "{{.collectionname}}.{{.nodename}}.{{.resourcename}}"
 	targetWithParent        = "{{.collectionname}}.{{.parentname}}.{{.resourcename}}_{{.nodename}}"
 	targetWildCard          = "*.*"
-	templateFromTime        = "&from={{.start_time}}"
-	templateUntilTime       = "&until={{.end_time}}"
+	templateFromTime        = "&from={{.time}}"
+	templateUntilTime       = "&until={{.time}}"
 	timeFormat              = "15:04_20060102"
 	standardTimeFormat      = "2006-01-02T15:04:05.000Z"
 	fullQualifiedMetricName bool
@@ -171,7 +173,7 @@ func Matches(key string, keys []string) bool {
 	return false
 }
 
-func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}, error) {
+func ValidateRequest(params map[string]interface{}) error {
 	var resource string
 	if str, ok := params["resource"].(string); ok {
 		resource = str
@@ -186,131 +188,165 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 					b. Else receive the error and propogate it.
 			4. Return results
 		*/
-		return nil, fmt.Errorf("Unsupported Resource")
-	} else {
-		urlParams, urlParamsError := getUrlBaseTemplateParams(params)
-		if urlParamsError != nil {
-			return nil, urlParamsError
-		}
-		url, urlError := GetTemplateParsedString(urlParams, templateUrl)
-		if urlError != nil {
-			return nil, urlError
-		}
+		return fmt.Errorf("Unsupported Resource")
+	}
+	return nil
+}
 
-		if startTime, ok := params["start_time"]; ok && startTime != "" {
-			timeString, timeStringError := util.GetString(startTime)
-			if timeStringError != nil {
-				return nil, fmt.Errorf("Start time %v. Error: %v", params["start_time"], timeStringError)
-			}
-			dateFormat, dateFormatErr := formatDate(timeString)
-			if dateFormatErr != nil {
-				return nil, dateFormatErr
-			}
-			params["start_time"] = dateFormat
-			urlTime, urlTimeError := GetTemplateParsedString(params, templateFromTime)
-			if urlTimeError != nil {
-				return nil, urlTimeError
-			}
-			url = url + urlTime
+func GetRequestPath(params map[string]interface{}) (string, error) {
+	urlParams, urlParamsError := getUrlBaseTemplateParams(params)
+	if urlParamsError != nil {
+		return "", urlParamsError
+	}
+	url, urlError := GetTemplateParsedString(urlParams, templateUrl)
+	if urlError != nil {
+		return "", urlError
+	}
+	if startTime, ok := params["start_time"]; ok && startTime != "" {
+		validatedStartTime, validatedStartTimeError := GetValidatedGraphiteSupportedTime(startTime, templateFromTime)
+		if validatedStartTimeError != nil {
+			return "", validatedStartTimeError
 		}
+		url = url + validatedStartTime
+	}
 
-		if endTime, ok := params["end_time"]; ok && endTime != "" {
-			timeString, timeStringError := util.GetString(params["end_time"])
-			if timeStringError != nil {
-				return nil, fmt.Errorf("End time %v. Error : %v", params["end_time"], timeStringError)
-			}
-			dateFormat, dateFormatErr := formatDate(timeString)
-			if dateFormatErr != nil {
-				return nil, dateFormatErr
-			}
-			params["end_time"] = dateFormat
-			urlTime, urlTimeError := GetTemplateParsedString(params, templateUntilTime)
-			if urlTimeError != nil {
-				return nil, urlTimeError
-			}
-			url = url + urlTime
+	if endTime, ok := params["end_time"]; ok && endTime != "" {
+		validatedEndTime, validatedEndTimeError := GetValidatedGraphiteSupportedTime(endTime, templateUntilTime)
+		if validatedEndTimeError != nil {
+			return "", validatedEndTimeError
 		}
+		url = url + validatedEndTime
+	}
 
-		if params["interval"] != "" && params["interval"] != monitoring.Latest {
-			timeString, timeStringError := util.GetString(params["interval"])
-			if timeStringError != nil {
-				return nil, fmt.Errorf("Start time %v. Error: %v", params["start_time"], timeStringError)
-			}
-			dateFormat, dateFormatErr := formatDate(timeString)
-			if dateFormatErr != nil {
-				return nil, dateFormatErr
-			}
-			params["interval"] = dateFormat
-			var templ string
-			if params["start_time"] == "" && params["end_time"] == "" {
-				templ = templateFromTime
-			} else if params["start_time"] != "" && params["end_time"] == "" {
-				templ = templateUntilTime
-			} else {
-				return nil, fmt.Errorf("Not supported")
-			}
-			urlTime, urlTimeError := GetTemplateParsedString(map[string]interface{}{"start_time": params["interval"]}, templ)
-			if urlTimeError != nil {
-				return nil, urlTimeError
-			}
-			url = url + urlTime
+	if params["interval"] != "" && params["interval"] != monitoring.Latest {
+		timeString, timeStringError := util.GetString(params["interval"])
+		if timeStringError != nil {
+			return "", fmt.Errorf("Start time %v. Error: %v", params["start_time"], timeStringError)
 		}
-
-		results, getError := util.HTTPGet(url)
-		if getError != nil {
-			return nil, getError
+		dateFormat, dateFormatErr := formatDate(timeString)
+		if dateFormatErr != nil {
+			return "", dateFormatErr
+		}
+		params["interval"] = dateFormat
+		var templ string
+		if params["start_time"] == "" && params["end_time"] == "" {
+			templ = templateFromTime
+		} else if params["start_time"] != "" && params["end_time"] == "" {
+			templ = templateUntilTime
 		} else {
-			var metrics []GraphiteMetric
-			if mErr := json.Unmarshal(results, &metrics); mErr != nil {
-				return nil, fmt.Errorf("Error unmarshalling the metrics %v.Error:%v", metrics, mErr)
-			}
-			if params["interval"] == monitoring.Latest {
-				/*
-						 The output of cactistyle graphite function(It gives summarised output including max value, min value and current non-nil value) is as under:
-					       [{"target": "<metric_name> Current:<current_val> Max:<max> Min:<min> ", "datapoints": [[val1, timestamp1],...]}
-						....
-						]
-				*/
-
-				for metricIndex, metric := range metrics {
-					target := metric.Target
-					if !strings.Contains(target, "Current:") {
-						return nil, fmt.Errorf("Current non-nil value is not available")
-					}
-					targetContents := strings.Fields(target)
-
-					index := -1
-					for contentIndex, content := range targetContents {
-						if strings.Contains(content, "Current:") {
-							index = contentIndex
-							break
-						}
-					}
-
-					if index == -1 {
-						return nil, fmt.Errorf("Current non-nil value is not available")
-					}
-
-					statValues := strings.Split(targetContents[index], ":")
-					if len(statValues) != 2 {
-						return nil, fmt.Errorf("Current non-nil value is not available")
-					}
-
-					var statVar []interface{}
-					statVar = append(statVar, statValues[1])
-					/*
-						 Effectively the current value returned by graphite is actually the last non-nil value in graphite for the metric
-						 Since graphite doesn't return the time stamp of curr ent value it is felt safe to insert a 0 for the field,
-						instead of meddling into looking at when actually the currentvalue appears in the possibly humongously huge set of data values
-					*/
-					statVar = append(statVar, 0)
-
-					metrics[metricIndex].Target = targetContents[0]
-					metrics[metricIndex].Stats = stats([]stat{statVar})
-				}
-			}
-			return metrics, nil
+			return "", fmt.Errorf("Not supported")
 		}
+		urlTime, urlTimeError := GetTemplateParsedString(map[string]interface{}{"start_time": params["interval"]}, templ)
+		if urlTimeError != nil {
+			return "", urlTimeError
+		}
+		url = url + urlTime
+	}
+	return url, nil
+}
+
+func GetValidatedGraphiteSupportedTime(time interface{}, graphiteTimeTemplate string) (string, error) {
+	timeString, timeStringError := util.GetString(time)
+	if timeStringError != nil {
+		return "", fmt.Errorf("Time %v. Error: %v", time, timeStringError)
+	}
+
+	dateFormat, dateFormatErr := formatDate(timeString)
+	if dateFormatErr != nil {
+		return "", dateFormatErr
+	}
+
+	params := make(map[string]interface{})
+	params["time"] = dateFormat
+
+	urlTime, urlTimeError := GetTemplateParsedString(params, graphiteTimeTemplate)
+	if urlTimeError != nil {
+		return "", urlTimeError
+	}
+
+	return urlTime, nil
+}
+
+func HttpResponse(w http.ResponseWriter, status_code int, msg string, args ...string) {
+	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	w.WriteHeader(status_code)
+	var ctxt string
+	if len(args) > 0 {
+		ctxt = args[0]
+	}
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		logger.Get().Error("%s-Error: %v", ctxt, err)
+	}
+	return
+}
+
+func (tsdbm GraphiteManager) QueryMonitoringDB(urlStr string, w http.ResponseWriter, r *http.Request) error {
+	url := fmt.Sprintf("http://%s:%s/render?%s", conf.SystemConfig.TimeSeriesDBConfig.Hostname, strconv.Itoa(conf.SystemConfig.TimeSeriesDBConfig.Port), urlStr)
+	http.Redirect(w, r, url, http.StatusFound)
+	return nil
+}
+
+func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}, error) {
+	err := ValidateRequest(params)
+	if err != nil {
+		return nil, err
+	}
+	url, err := GetRequestPath(params)
+	if err != nil {
+		return nil, err
+	}
+	results, getError := util.HTTPGet(url)
+	if getError != nil {
+		return nil, getError
+	} else {
+		var metrics []GraphiteMetric
+		if mErr := json.Unmarshal(results, &metrics); mErr != nil {
+			return nil, fmt.Errorf("Error unmarshalling the metrics %v.Error:%v", metrics, mErr)
+		}
+		if params["interval"] == monitoring.Latest {
+			/*
+					 The output of cactistyle graphite function(It gives summarised output including max value, min value and current non-nil value) is as under:
+				       [{"target": "<metric_name> Current:<current_val> Max:<max> Min:<min> ", "datapoints": [[val1, timestamp1],...]}
+					....
+					]
+			*/
+			for metricIndex, metric := range metrics {
+				target := metric.Target
+				if !strings.Contains(target, "Current:") {
+					return nil, fmt.Errorf("Current non-nil value is not available")
+				}
+				targetContents := strings.Fields(target)
+				index := -1
+				for contentIndex, content := range targetContents {
+					if strings.Contains(content, "Current:") {
+						index = contentIndex
+						break
+					}
+				}
+				if index == -1 {
+					return nil, fmt.Errorf("Current non-nil value is not available")
+				}
+
+				statValues := strings.Split(targetContents[index], ":")
+				if len(statValues) != 2 {
+					return nil, fmt.Errorf("Current non-nil value is not available")
+				}
+				var statVar []interface{}
+				statVar = append(statVar, statValues[1])
+				/*
+				 Effectively the current value returned by graphite is actually the last non-nil
+				 value in graphite for the metric
+				 Since graphite doesn't return the time stamp of curr ent value it is felt safe to
+				 insert a 0 for the field,
+				 instead of meddling into looking at when actually the currentvalue appears in the
+				 possibly humongously huge set of data values
+				*/
+				statVar = append(statVar, 0)
+				metrics[metricIndex].Target = targetContents[0]
+				metrics[metricIndex].Stats = stats([]stat{statVar})
+			}
+		}
+		return metrics, nil
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/skyrings/skyring-common/monitoring"
 	"github.com/skyrings/skyring-common/utils"
 	"io"
+	"net/http"
 	"regexp"
 	"time"
 )
@@ -46,6 +47,10 @@ func queryDB(cmd string) (res []influxdb.Result, err error) {
 
 func (idm InfluxdbManager) GetResourceName(params map[string]interface{}) (string, error) {
 	return "", nil
+}
+
+func (idm InfluxdbManager) QueryMonitoringDB(urlStr string, w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (idm InfluxdbManager) QueryDB(params map[string]interface{}) (interface{}, error) {

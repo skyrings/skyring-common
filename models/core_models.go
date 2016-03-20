@@ -19,26 +19,28 @@ import (
 )
 
 type Node struct {
-	NodeId        uuid.UUID         `json:"nodeid"`
-	Hostname      string            `json:"hostname"`
-	Tags          []string          `json:"tags"`
-	ManagementIP4 string            `json:"management_ip4"`
-	ClusterIP4    string            `json:"cluster_ip4"`
-	PublicIP4     string            `json:"public_ip4"`
-	ClusterId     uuid.UUID         `json:"clusterid"`
-	Location      string            `json:"location"`
-	Status        NodeStatus        `json:"status"`
-	State         NodeState         `json:"state"`
-	AlmStatus     AlarmStatus       `json:"almstatus"`
-	AlmCount      int               `json:"almcount"`
-	Options       map[string]string `json:"options"`
-	CPUs          []Cpu             `json:"cpus"`
-	NetworkInfo   Network           `json:"network_info"`
-	StorageDisks  []Disk            `json:"storage_disks"`
-	Memory        Memory            `json:"memory"`
-	OS            OperatingSystem   `json:"os"`
-	Enabled       bool              `json:"enabled"`
-	Fingerprint   string            `json:"saltfingerprint"`
+	NodeId                uuid.UUID         `json:"nodeid"`
+	Hostname              string            `json:"hostname"`
+	Tags                  []string          `json:"tags"`
+	ManagementIP4         string            `json:"management_ip4"`
+	ClusterIP4            string            `json:"cluster_ip4"`
+	PublicIP4             string            `json:"public_ip4"`
+	ClusterId             uuid.UUID         `json:"clusterid"`
+	Location              string            `json:"location"`
+	Status                NodeStatus        `json:"status"`
+	State                 NodeState         `json:"state"`
+	AlmStatus             AlarmStatus       `json:"almstatus"`
+	AlmCount              int               `json:"almcount"`
+	Options               map[string]string `json:"options"`
+	CPUs                  []Cpu             `json:"cpus"`
+	NetworkInfo           Network           `json:"network_info"`
+	StorageDisks          []Disk            `json:"storage_disks"`
+	Memory                Memory            `json:"memory"`
+	OS                    OperatingSystem   `json:"os"`
+	Enabled               bool              `json:"enabled"`
+	Fingerprint           string            `json:"saltfingerprint"`
+	MemoryPercentageUsage float64           `json:"memorypercentageusage"`
+	CpuPercentageUsage    float64           `json:"cpupercentageusage"`
 }
 
 type Network struct {
