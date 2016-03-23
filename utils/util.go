@@ -8,14 +8,17 @@ import (
 	"github.com/skyrings/skyring-common/conf"
 	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
+	"github.com/skyrings/skyring-common/monitoring"
 	"github.com/skyrings/skyring-common/tools/logger"
 	"github.com/skyrings/skyring-common/tools/task"
 	"github.com/skyrings/skyring-common/tools/uuid"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -192,6 +195,165 @@ func GetNodes(clusterNodes []models.ClusterNode) (map[uuid.UUID]models.Node, err
 		nodes[node.NodeId] = node
 	}
 	return nodes, nil
+}
+
+func UpdateThresholdInfoToTable(tEvent models.ThresholdEvent) (err error, isRaiseEvent bool) {
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	collection := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_THRESHOLD_BREACHES)
+	var tEventInDb models.ThresholdEvent
+	selectCriteria := bson.M{
+		"entityid":        tEvent.EntityId,
+		"clusterid":       tEvent.ClusterId,
+		"utilizationtype": tEvent.UtilizationType,
+		"entityname":      tEvent.EntityName,
+	}
+	err = collection.Find(selectCriteria).One(&tEventInDb)
+	if err != nil {
+		if err == mgo.ErrNotFound {
+			if tEvent.ThresholdSeverity == strings.ToUpper(models.STATUS_OK) {
+				return nil, false
+			}
+			if err := collection.Insert(tEvent); err != nil {
+				return fmt.Errorf("Failed to persist event %v to db.Error %v",
+					tEvent, err), true
+			}
+			return nil, true
+		}
+	} else {
+		if tEvent.ThresholdSeverity == tEventInDb.ThresholdSeverity {
+			return nil, false
+		} else if tEvent.ThresholdSeverity == models.STATUS_OK {
+			if err = collection.Remove(selectCriteria); err != nil {
+				return fmt.Errorf("Failed to update the db, that %v of %v is back to normal.Err %v",
+					tEvent.UtilizationType, tEvent.EntityName, err), true
+			}
+			return nil, true
+		} else {
+			if err := collection.Update(selectCriteria, tEvent); err != nil {
+				return fmt.Errorf("Failed to persist event %v to db.Error %v",
+					tEvent, err), true
+			}
+			return nil, true
+		}
+	}
+	return nil, false
+}
+
+func AnalyseThresholdBreach(ctxt string, utilizationType string, resourceName string, resourceUtilization float64, cluster models.Cluster) (models.Event, bool, error) {
+	var event models.Event
+	timeStamp := time.Now()
+	plugin := cluster.Monitoring.Plugins[monitoring.GetPluginIndex(utilizationType, cluster.Monitoring.Plugins)]
+	var applicableConfig monitoring.PluginConfig
+	var applicableThresholdValue float64
+	var message string
+
+	var entityIdentifier string
+	entityId, entityIdFetchError := getEntityIdFromNameAndUtilizationType(utilizationType, resourceName, cluster)
+	if entityIdFetchError != nil {
+		logger.Get().Error("%s - Error fetching the id for %v in cluster %v",
+			ctxt, resourceName, cluster.Name)
+		return models.Event{}, false, fmt.Errorf("%s - Error fetching the id for %v in cluster %v",
+			ctxt, resourceName, cluster.Name)
+	}
+	entityIdentifier = (*entityId).String()
+
+	for _, config := range plugin.Configs {
+		if config.Category == monitoring.THRESHOLD {
+			currentThresholdValue, thresholdValError := strconv.ParseFloat(config.Value, 64)
+			if thresholdValError != nil {
+				logger.Get().Error("%s - %v-%v configuration for %v in cluster %v could not be converted.Err %v\n",
+					ctxt, config.Category, config.Type, plugin.Name, cluster.Name, thresholdValError)
+			}
+
+			if resourceUtilization > currentThresholdValue && applicableThresholdValue < currentThresholdValue {
+				applicableConfig = config
+				applicableThresholdValue = currentThresholdValue
+			}
+		}
+	}
+
+	if applicableConfig.Type == "" {
+		applicableConfig.Type = models.STATUS_OK
+		message = fmt.Sprintf("%v of cluster %v with value %v back to normal",
+			plugin.Name, cluster.Name, resourceUtilization)
+	}
+
+	tEvent := models.ThresholdEvent{
+		ClusterId:         cluster.ClusterId,
+		UtilizationType:   plugin.Name,
+		ThresholdSeverity: strings.ToUpper(applicableConfig.Type),
+		TimeStamp:         timeStamp,
+		EntityId:          *entityId,
+		EntityName:        resourceName,
+	}
+
+	err, isRaiseEvent := UpdateThresholdInfoToTable(tEvent)
+	if err != nil {
+		logger.Get().Error("%s - %v", ctxt, err)
+	}
+
+	if isRaiseEvent {
+		event = models.Event{
+			Timestamp: timeStamp,
+			ClusterId: cluster.ClusterId,
+			NodeId:    cluster.ClusterId,
+			Tag: fmt.Sprintf("skyring/%v/cluster/%v/threshold/%v/%v",
+				cluster.Type, cluster.ClusterId, plugin.Name, strings.ToUpper(applicableConfig.Type)),
+			Tags: map[string]string{
+				models.CURRENT_VALUE:   strconv.FormatFloat(resourceUtilization, 'E', -1, 64),
+				models.ENTITY_ID:       entityIdentifier,
+				models.PLUGIN:          plugin.Name,
+				models.THRESHOLD_TYPE:  strings.ToUpper(applicableConfig.Type),
+				models.THRESHOLD_VALUE: strconv.FormatFloat(applicableThresholdValue, 'E', -1, 64),
+				models.ENTITY_NAME:     resourceName,
+			},
+			Severity: strings.ToUpper(applicableConfig.Type),
+		}
+		if message == "" {
+			message = fmt.Sprintf("%v of cluster %v with value %v breached %v threshold of value %v",
+				plugin.Name, cluster.Name, resourceUtilization, strings.ToUpper(applicableConfig.Type), applicableThresholdValue)
+		}
+		event.Message = message
+		return event, true, nil
+	}
+	return models.Event{}, false, nil
+}
+
+func getEntityIdFromNameAndUtilizationType(utilizationType string, resourceName string, cluster models.Cluster) (*uuid.UUID, error) {
+	switch utilizationType {
+	case monitoring.CLUSTER_UTILIZATION:
+		return &(cluster.ClusterId), nil
+	case monitoring.SLU_UTILIZATION:
+		var slu models.StorageLogicalUnit
+		err := getEntity(cluster.ClusterId, resourceName, models.COLL_NAME_STORAGE_LOGICAL_UNITS, &slu)
+		if err != nil {
+			return nil, fmt.Errorf("Could not fetch osd with name %v in cluster %v.Error %v",
+				resourceName, cluster.Name, err)
+		}
+		return &(slu.SluId), nil
+	case monitoring.STORAGE_UTILIZATION:
+		var storage models.Storage
+		err := getEntity(cluster.ClusterId, resourceName, models.COLL_NAME_STORAGE, &storage)
+		if err != nil {
+			return nil, fmt.Errorf("Could not fetch pool with name %v in cluster %v",
+				storage.Name, cluster.Name)
+		}
+		return &(storage.StorageId), nil
+	case monitoring.STORAGE_PROFILE_UTILIZATION:
+		return &(cluster.ClusterId), nil
+	}
+	return nil, fmt.Errorf("Unsupported utilization type %v", utilizationType)
+}
+
+func getEntity(clusterId uuid.UUID, resourceName string, collectionName string, entity interface{}) error {
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	collection := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(collectionName)
+	if err := collection.Find(bson.M{"clusterid": clusterId, "name": resourceName}).One(entity); err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetNodesByIdStr(clusterNodes []models.ClusterNode) (map[string]models.Node, error) {

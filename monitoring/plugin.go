@@ -56,6 +56,7 @@ const (
 	WARNING                     = "warning"
 	OK                          = "ok"
 	THRESHOLD                   = "threshold"
+	WARNING                     = "warning"
 )
 
 var (
@@ -66,8 +67,8 @@ var (
 	}
 
 	SupportedThresholdTypes = []string{
-		"critical",
-		"warning",
+		CRITICAL,
+		WARNING,
 	}
 
 	SupportedMonitoringPlugins = []string{

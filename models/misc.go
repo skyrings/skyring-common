@@ -118,14 +118,24 @@ type NodeEvent struct {
 }
 
 type Event struct {
-	EventId   uuid.UUID         `json:"event_id"`
-	ClusterId uuid.UUID         `json:"cluster_id"`
-	NodeId    uuid.UUID         `json:"node_id"`
-	Timestamp time.Time         `json:"timestamp"`
-	Tag       string            `json:"tag"`
-	Tags      map[string]string `json:"tags"`
-	Message   string            `json:"message"`
-	Severity  string            `json:"severity"`
+	EventId           uuid.UUID              `json:"event_id"`
+	ClusterId         uuid.UUID              `json:"cluster_id"`
+	NodeId            uuid.UUID              `json:"node_id"`
+	Timestamp         time.Time              `json:"timestamp"`
+	Tag               string                 `json:"tag"`
+	Tags              map[string]string      `json:"tags"`
+	Message           string                 `json:"message"`
+	Severity          string                 `json:"severity"`
+	ImpactingEntities map[string][]uuid.UUID `json:"impactingentities"`
+}
+
+type ThresholdEvent struct {
+	ClusterId         uuid.UUID `json:"clusterid"`
+	UtilizationType   string    `json:"utilizationtype"`
+	ThresholdSeverity string    `json:"thresholdseverity"`
+	TimeStamp         time.Time `json:"timestamp"`
+	EntityId          uuid.UUID `json:"entityid"`
+	EntityName        string    `json:"entityname"`
 }
 
 type AppEvent struct {
@@ -205,6 +215,7 @@ const (
 	COLL_NAME_LDAP                  = "ldap"
 	COLL_NAME_BLOCK_DEVICES         = "block_devices"
 	COLL_NAME_SYSTEM_CAPABILITIES   = "system_capabilities"
+	COLL_NAME_THRESHOLD_BREACHES    = "threshold_breaches"
 
 	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
@@ -464,6 +475,7 @@ const (
 	PLUGIN          = "Plugin"
 	THRESHOLD_TYPE  = "ThresholdType"
 	THRESHOLD_VALUE = "ThresholdValue"
+	ENTITY_NAME     = "EntityName"
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }
