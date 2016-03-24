@@ -129,7 +129,7 @@ func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, n
 				failedNodes = append(failedNodes, node)
 				return
 			}
-			t.UpdateStatus("Installed packages on %s:", hostname)
+			t.UpdateStatus("Installed packages on: %s", hostname)
 		}(node, db_nodes[node.NodeId].Hostname)
 	}
 	wg.Wait()
