@@ -20,7 +20,7 @@ import (
 	"path"
 )
 
-const(
+const (
 	aboutConfigFile = "about.conf"
 )
 
@@ -97,7 +97,7 @@ type SystemCapabilities struct {
 }
 
 var (
-	SystemConfig    SkyringCollection
+	SystemConfig SkyringCollection
 )
 
 func LoadAppConfiguration(configFilePath string, configFile string) {
