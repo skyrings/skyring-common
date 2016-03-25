@@ -113,7 +113,7 @@ type Cluster struct {
 	WorkLoad            string                 `json:"workload"`
 	Status              ClusterStatus          `json:"status"`
 	Tags                []string               `json:"tags"`
-	Options             map[string]string      `json:"options"`
+	Options             map[string]interface{} `json:"options"`
 	OpenStackServices   []string               `json:"openstack_services"`
 	Networks            ClusterNetworks        `json:"networks"`
 	Monitoring          MonitoringState        `json:"monitoring"`
