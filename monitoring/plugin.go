@@ -52,6 +52,7 @@ const (
 	LOOP_BACK_INTERFACE         = "interface-lo"
 	CRITICAL                    = "critical"
 	WARN                        = "warn"
+	WARNING                     = "warning"
 	OK                          = "ok"
 	THRESHOLD                   = "threshold"
 )
