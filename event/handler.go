@@ -19,6 +19,7 @@ import (
 	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
+	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -75,6 +76,64 @@ func ClearCorrespondingAlert(event models.AppEvent, ctxt string) error {
 				" %v. error: %v", ctxt, events[0].EventId.String(), err))
 		}
 
+	}
+	return nil
+}
+
+func UpdateNodeAlarmCount(entityId uuid.UUID, clusterId uuid.UUID, alarmState models.AlarmStatus, ctxt string) error {
+	var node models.Node
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_NODES)
+	if err := coll.Find(bson.M{
+		"nodeid": entityId, "clusterid": clusterId}).One(&node); err != nil {
+		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+		return err
+	}
+	if alarmState == models.ALARM_STATUS_CLEARED && node.AlmCount > 0 {
+		node.AlmCount = node.AlmCount - 1
+		if node.AlmCount == 0 {
+			node.AlmStatus = alarmState
+		}
+	} else {
+		node.AlmCount = node.AlmCount + 1
+		if node.AlmStatus > alarmState {
+			node.AlmStatus = alarmState
+		}
+	}
+	if err := coll.Update(bson.M{"nodeid": entityId},
+		bson.M{"$set": node}); err != nil {
+		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
+		return err
+	}
+	return nil
+}
+
+func UpdateClusterAlarmCount(entityId uuid.UUID, alarmState models.AlarmStatus, ctxt string) error {
+	var cluster models.Cluster
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_CLUSTERS)
+	if err := coll.Find(bson.M{
+		"clusterid": entityId}).One(&cluster); err != nil {
+		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+		return err
+	}
+	if alarmState == models.ALARM_STATUS_CLEARED && cluster.AlmCount > 0 {
+		cluster.AlmCount = cluster.AlmCount - 1
+		if cluster.AlmCount == 0 {
+			cluster.AlmStatus = alarmState
+		}
+	} else {
+		cluster.AlmCount = cluster.AlmCount + 1
+		if cluster.AlmStatus > alarmState {
+			cluster.AlmStatus = alarmState
+		}
+	}
+	if err := coll.Update(bson.M{"clusterid": entityId},
+		bson.M{"$set": cluster}); err != nil {
+		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
+		return err
 	}
 	return nil
 }
