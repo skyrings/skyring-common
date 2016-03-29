@@ -40,6 +40,7 @@ type AddClusterRequest struct {
 	MonitoringPlugins  []monitoring.Plugin    `json:"monitoringplugins"`
 	MonitoringInterval int                    `json:"monitoringinterval"`
 	DisableAutoExpand  bool                   `json:"disableautoexpand"`
+	JournalSize        string                 `json:"journalsize"`
 }
 
 type ClusterSummary struct {

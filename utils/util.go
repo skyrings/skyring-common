@@ -383,4 +383,3 @@ func GetReadableFloat(str string, ctxt string) (string, error) {
 	}
 	return fmt.Sprintf("%.2f", f), nil
 }
-

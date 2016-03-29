@@ -128,6 +128,7 @@ type Cluster struct {
 	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
 	ObjectCount         map[string]int64       `json:"objectcount"`
 	AutoExpand          bool                   `json:"autoexpand"`
+	JournalSize         string                 `json:"journalsize"`
 }
 
 type System struct {
