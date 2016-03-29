@@ -56,7 +56,6 @@ const (
 	WARNING                     = "warning"
 	OK                          = "ok"
 	THRESHOLD                   = "threshold"
-	WARNING                     = "warning"
 )
 
 var (
