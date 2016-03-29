@@ -219,6 +219,8 @@ const (
 	COLL_NAME_SYSTEM_CAPABILITIES                = "system_capabilities"
 	COLL_NAME_THRESHOLD_BREACHES                 = "threshold_breaches"
 	COLL_NAME_CLUSTER_NOTIFICATION_SUBSCRIPTIONS = "cluster_notification_subscriptions"
+	COLL_NAME_ARCHIVE_TASKS                      = "archive_tasks"
+	COLL_NAME_ARCHIVE_EVENTS                     = "archive_events"
 
 	TASKS_PER_PAGE      = 100
 	LDAP_USERS_PER_PAGE = 100
