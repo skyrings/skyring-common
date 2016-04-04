@@ -19,7 +19,6 @@ import (
 	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
-	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
@@ -35,21 +34,24 @@ func Persist_event(event models.Event, ctxt string) error {
 	return nil
 }
 
-func ClearCorrespondingAlert(event models.AppEvent, ctxt string) error {
+func ClearCorrespondingAlert(event models.AppEvent, ctxt string) (models.AlarmStatus, error) {
 	var events []models.AppEvent
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_APP_EVENTS)
 	count := 0
-	for count < 5 {
+	for count < 3 {
 		if err := coll.Find(bson.M{
 			"name":      event.Name,
 			"entityid":  event.EntityId,
 			"clusterid": event.ClusterId}).Sort("-timestamp").All(&events); err != nil {
 			logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
-			return err
+			return models.ALARM_STATUS_INDETERMINATE, err
 		}
 		if len(events) == 0 || events[0].Severity == models.ALARM_STATUS_CLEARED {
+			if event.Severity != models.ALARM_STATUS_CLEARED {
+				break
+			}
 			time.Sleep(180 * time.Second)
 			count = count + 1
 		} else {
@@ -57,51 +59,68 @@ func ClearCorrespondingAlert(event models.AppEvent, ctxt string) error {
 		}
 	}
 	if len(events) == 0 || events[0].Severity == models.ALARM_STATUS_CLEARED {
-		logger.Get().Warning("%s-Corresponding alert not available for event: %s",
-			ctxt, event.EventId)
-		return errors.New(fmt.Sprintf("Corresponding alert not available for event: %s",
+		return models.ALARM_STATUS_INDETERMINATE, errors.New(fmt.Sprintf("Corresponding alert not available for event: %s",
 			event.EventId))
 	} else {
 		events[0].Acked = true
 		events[0].SystemAckedTime = time.Now()
 		events[0].AckedByEvent = event.EventId.String()
 		events[0].SystemAckComment = fmt.Sprintf("This event is dismissed automatically,"+
-			" as we have recieved a corresponding recovery event: %s", event.EventId.String())
+			" as we have recieved a corresponding event: %s", event.EventId.String())
 
 		if err := coll.Update(bson.M{"eventid": events[0].EventId},
 			bson.M{"$set": events[0]}); err != nil {
 			logger.Get().Warning(fmt.Sprintf("%s-Error updating record in DB for event:"+
 				" %v. error: %v", ctxt, events[0].EventId.String(), err))
-			return errors.New(fmt.Sprintf("%s-Error updating record in DB for event:"+
-				" %v. error: %v", ctxt, events[0].EventId.String(), err))
+			return models.ALARM_STATUS_INDETERMINATE, errors.New(fmt.Sprintf("%s-Error updating"+
+				" record in DB for event: %v. error: %v",
+				ctxt, events[0].EventId.String(), err))
 		}
 
 	}
-	return nil
+	return events[0].Severity, nil
 }
 
-func UpdateNodeAlarmCount(entityId uuid.UUID, clusterId uuid.UUID, alarmState models.AlarmStatus, ctxt string) error {
+func UpdateNodeAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
 	var node models.Node
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_NODES)
 	if err := coll.Find(bson.M{
-		"nodeid": entityId, "clusterid": clusterId}).One(&node); err != nil {
+		"nodeid": event.NodeId, "clusterid": event.ClusterId}).One(&node); err != nil {
 		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
 		return err
 	}
-	if alarmState == models.ALARM_STATUS_CLEARED && node.AlmCount > 0 {
-		node.AlmCount = node.AlmCount - 1
-		if node.AlmCount == 0 {
-			node.AlmStatus = alarmState
+
+	if event.Severity == models.ALARM_STATUS_MAJOR ||
+		event.Severity == models.ALARM_STATUS_CRITICAL {
+		node.AlmCritCount += 1
+	} else if event.Severity == models.ALARM_STATUS_MINOR ||
+		event.Severity == models.ALARM_STATUS_WARNING {
+		node.AlmWarnCount += 1
+	}
+
+	if clearedSeverity == models.ALARM_STATUS_MAJOR ||
+		clearedSeverity == models.ALARM_STATUS_CRITICAL {
+		if node.AlmCritCount > 0 {
+			node.AlmCritCount -= 1
 		}
-	} else {
-		node.AlmCount = node.AlmCount + 1
-		if node.AlmStatus > alarmState {
-			node.AlmStatus = alarmState
+	} else if clearedSeverity == models.ALARM_STATUS_MINOR ||
+		clearedSeverity == models.ALARM_STATUS_WARNING {
+		if node.AlmWarnCount > 0 {
+			node.AlmWarnCount -= 1
 		}
 	}
-	if err := coll.Update(bson.M{"nodeid": entityId},
+
+	if node.AlmCritCount > 0 {
+		node.AlmStatus = models.ALARM_STATUS_CRITICAL
+	} else if node.AlmWarnCount > 0 {
+		node.AlmStatus = models.ALARM_STATUS_WARNING
+	} else {
+		node.AlmStatus = models.ALARM_STATUS_CLEARED
+	}
+
+	if err := coll.Update(bson.M{"nodeid": event.NodeId},
 		bson.M{"$set": node}); err != nil {
 		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
 		return err
@@ -109,28 +128,46 @@ func UpdateNodeAlarmCount(entityId uuid.UUID, clusterId uuid.UUID, alarmState mo
 	return nil
 }
 
-func UpdateClusterAlarmCount(entityId uuid.UUID, alarmState models.AlarmStatus, ctxt string) error {
+func UpdateClusterAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
 	var cluster models.Cluster
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
 	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_CLUSTERS)
 	if err := coll.Find(bson.M{
-		"clusterid": entityId}).One(&cluster); err != nil {
+		"clusterid": event.ClusterId}).One(&cluster); err != nil {
 		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
 		return err
 	}
-	if alarmState == models.ALARM_STATUS_CLEARED && cluster.AlmCount > 0 {
-		cluster.AlmCount = cluster.AlmCount - 1
-		if cluster.AlmCount == 0 {
-			cluster.AlmStatus = alarmState
+
+	if event.Severity == models.ALARM_STATUS_MAJOR ||
+		event.Severity == models.ALARM_STATUS_CRITICAL {
+		cluster.AlmCritCount += 1
+	} else if event.Severity == models.ALARM_STATUS_MINOR ||
+		event.Severity == models.ALARM_STATUS_WARNING {
+		cluster.AlmWarnCount += 1
+	}
+
+	if clearedSeverity == models.ALARM_STATUS_MAJOR ||
+		clearedSeverity == models.ALARM_STATUS_CRITICAL {
+		if cluster.AlmCritCount > 0 {
+			cluster.AlmCritCount -= 1
 		}
-	} else {
-		cluster.AlmCount = cluster.AlmCount + 1
-		if cluster.AlmStatus > alarmState {
-			cluster.AlmStatus = alarmState
+	} else if clearedSeverity == models.ALARM_STATUS_MINOR ||
+		clearedSeverity == models.ALARM_STATUS_WARNING {
+		if cluster.AlmWarnCount > 0 {
+			cluster.AlmWarnCount -= 1
 		}
 	}
-	if err := coll.Update(bson.M{"clusterid": entityId},
+
+	if cluster.AlmCritCount > 0 {
+		cluster.AlmStatus = models.ALARM_STATUS_CRITICAL
+	} else if cluster.AlmWarnCount > 0 {
+		cluster.AlmStatus = models.ALARM_STATUS_WARNING
+	} else {
+		cluster.AlmStatus = models.ALARM_STATUS_CLEARED
+	}
+
+	if err := coll.Update(bson.M{"clusterid": event.ClusterId},
 		bson.M{"$set": cluster}); err != nil {
 		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
 		return err

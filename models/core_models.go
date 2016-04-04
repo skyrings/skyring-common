@@ -30,7 +30,8 @@ type Node struct {
 	Status                NodeStatus        `json:"status"`
 	State                 NodeState         `json:"state"`
 	AlmStatus             AlarmStatus       `json:"almstatus"`
-	AlmCount              int               `json:"almcount"`
+	AlmWarnCount          int               `json:"almwarncount"`
+	AlmCritCount          int               `json:"almcritcount"`
 	Options               map[string]string `json:"options"`
 	CPUs                  []Cpu             `json:"cpus"`
 	NetworkInfo           Network           `json:"network_info"`
@@ -120,7 +121,8 @@ type Cluster struct {
 	MonitoringInterval  int                    `json:"monitoringinterval"`
 	State               ClusterState           `json:"state"`
 	AlmStatus           AlarmStatus            `json:"almstatus"`
-	AlmCount            int                    `json:"almcount"`
+	AlmWarnCount        int                    `json:"almwarncount"`
+	AlmCritCount        int                    `json:"almcritcount"`
 	Usage               Utilization            `json:"usage"`
 	StorageProfileUsage map[string]Utilization `json:"storageprofileusage"`
 	ObjectCount         map[string]int64       `json:"objectcount"`
@@ -169,7 +171,8 @@ type StorageLogicalUnit struct {
 	StorageProfile    string                 `json:"storageprofile"`
 	State             string                 `json:"state"`
 	AlmStatus         AlarmStatus            `json:"almstatus"`
-	AlmCount          int                    `json:"almcount"`
+	AlmWarnCount      int                    `json:"almwarncount"`
+	AlmCritCount      int                    `json:"almcritcount"`
 	Usage             Utilization            `json:"usage"`
 }
 
@@ -191,7 +194,8 @@ type Storage struct {
 	Usage               Utilization       `json:"usage"`
 	State               string            `json:"state"`
 	AlmStatus           AlarmStatus       `json:"almstatus"`
-	AlmCount            int               `json:"almcount"`
+	AlmWarnCount        int               `json:"almwarncount"`
+	AlmCritCount        int               `json:"almcritcount"`
 }
 
 type BlockDevice struct {

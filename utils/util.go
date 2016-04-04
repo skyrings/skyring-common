@@ -374,3 +374,13 @@ func GetNodesByIdStr(clusterNodes []models.ClusterNode) (map[string]models.Node,
 	}
 	return nodes, nil
 }
+
+func GetReadableFloat(str string, ctxt string) (string, error) {
+	f, err := strconv.ParseFloat(str, 64)
+	if err != nil {
+		logger.Get().Error("%s-Could not parse the string: %s", ctxt, str)
+		return str, err
+	}
+	return fmt.Sprintf("%.2f", f), nil
+}
+

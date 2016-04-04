@@ -484,6 +484,9 @@ const (
 	THRESHOLD_CONFIGS = "threshold_configs"
 	NOTIFICATION_LIST = "notification_list"
 	NOTIFY            = "Notify"
+ 	WARNING           = "WARNING"
+	OK                = "OK"
+	CRITICAL          = "CRITICAL"
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }
