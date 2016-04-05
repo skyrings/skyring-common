@@ -197,6 +197,7 @@ type Storage struct {
 	AlmStatus           AlarmStatus       `json:"almstatus"`
 	AlmWarnCount        int               `json:"almwarncount"`
 	AlmCritCount        int               `json:"almcritcount"`
+	SluIds              []uuid.UUID       `json:"slus"`
 }
 
 type BlockDevice struct {
