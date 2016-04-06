@@ -118,15 +118,15 @@ type NodeEvent struct {
 }
 
 type Event struct {
-	EventId           uuid.UUID              `json:"event_id"`
-	ClusterId         uuid.UUID              `json:"cluster_id"`
-	NodeId            uuid.UUID              `json:"node_id"`
-	Timestamp         time.Time              `json:"timestamp"`
-	Tag               string                 `json:"tag"`
-	Tags              map[string]string      `json:"tags"`
-	Message           string                 `json:"message"`
-	Severity          string                 `json:"severity"`
-	ImpactingEntities map[string][]uuid.UUID `json:"impactingentities"`
+	EventId         uuid.UUID          `json:"event_id"`
+	ClusterId       uuid.UUID          `json:"cluster_id"`
+	NodeId          uuid.UUID          `json:"node_id"`
+	Timestamp       time.Time          `json:"timestamp"`
+	Tag             string             `json:"tag"`
+	Tags            map[string]string  `json:"tags"`
+	Message         string             `json:"message"`
+	Severity        string             `json:"severity"`
+	ImpactingEvents map[string][]Event `json:"impactingentities"`
 }
 
 type ThresholdEvent struct {
@@ -483,6 +483,7 @@ const (
 	CLUSTER_CONFIGS   = "cluster_configs"
 	THRESHOLD_CONFIGS = "threshold_configs"
 	NOTIFICATION_LIST = "notification_list"
+	NOTIFY            = "Notify"
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }
