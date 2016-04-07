@@ -81,6 +81,41 @@ func ClearCorrespondingAlert(event models.AppEvent, ctxt string) (models.AlarmSt
 	return events[0].Severity, nil
 }
 
+func getAlarmCountAndStatus(eventSeverity models.AlarmStatus,
+	clearedSeverity models.AlarmStatus,
+	alarmCritCount int,
+	alarmWarnCount int) (models.AlarmStatus, int, int) {
+	if eventSeverity == models.ALARM_STATUS_MAJOR ||
+		eventSeverity == models.ALARM_STATUS_CRITICAL {
+		alarmCritCount += 1
+	} else if eventSeverity == models.ALARM_STATUS_MINOR ||
+		eventSeverity == models.ALARM_STATUS_WARNING {
+		alarmWarnCount += 1
+	}
+
+	if clearedSeverity == models.ALARM_STATUS_MAJOR ||
+		clearedSeverity == models.ALARM_STATUS_CRITICAL {
+		if alarmCritCount > 0 {
+			alarmCritCount -= 1
+		}
+	} else if clearedSeverity == models.ALARM_STATUS_MINOR ||
+		clearedSeverity == models.ALARM_STATUS_WARNING {
+		if alarmWarnCount > 0 {
+			alarmWarnCount -= 1
+		}
+	}
+	var alarmStatus models.AlarmStatus
+	if alarmCritCount > 0 {
+		alarmStatus = models.ALARM_STATUS_CRITICAL
+	} else if alarmWarnCount > 0 {
+		alarmStatus = models.ALARM_STATUS_WARNING
+	} else {
+		alarmStatus = models.ALARM_STATUS_CLEARED
+	}
+
+	return alarmStatus, alarmWarnCount, alarmCritCount
+}
+
 func UpdateNodeAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
 	var node models.Node
 	sessionCopy := db.GetDatastore().Copy()
@@ -91,34 +126,10 @@ func UpdateNodeAlarmCount(event models.AppEvent, clearedSeverity models.AlarmSta
 		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
 		return err
 	}
-
-	if event.Severity == models.ALARM_STATUS_MAJOR ||
-		event.Severity == models.ALARM_STATUS_CRITICAL {
-		node.AlmCritCount += 1
-	} else if event.Severity == models.ALARM_STATUS_MINOR ||
-		event.Severity == models.ALARM_STATUS_WARNING {
-		node.AlmWarnCount += 1
-	}
-
-	if clearedSeverity == models.ALARM_STATUS_MAJOR ||
-		clearedSeverity == models.ALARM_STATUS_CRITICAL {
-		if node.AlmCritCount > 0 {
-			node.AlmCritCount -= 1
-		}
-	} else if clearedSeverity == models.ALARM_STATUS_MINOR ||
-		clearedSeverity == models.ALARM_STATUS_WARNING {
-		if node.AlmWarnCount > 0 {
-			node.AlmWarnCount -= 1
-		}
-	}
-
-	if node.AlmCritCount > 0 {
-		node.AlmStatus = models.ALARM_STATUS_CRITICAL
-	} else if node.AlmWarnCount > 0 {
-		node.AlmStatus = models.ALARM_STATUS_WARNING
-	} else {
-		node.AlmStatus = models.ALARM_STATUS_CLEARED
-	}
+	node.AlmStatus, node.AlmWarnCount, node.AlmCritCount = getAlarmCountAndStatus(event.Severity,
+		clearedSeverity,
+		node.AlmCritCount,
+		node.AlmWarnCount)
 
 	if err := coll.Update(bson.M{"nodeid": event.NodeId},
 		bson.M{"$set": node}); err != nil {
@@ -139,36 +150,63 @@ func UpdateClusterAlarmCount(event models.AppEvent, clearedSeverity models.Alarm
 		return err
 	}
 
-	if event.Severity == models.ALARM_STATUS_MAJOR ||
-		event.Severity == models.ALARM_STATUS_CRITICAL {
-		cluster.AlmCritCount += 1
-	} else if event.Severity == models.ALARM_STATUS_MINOR ||
-		event.Severity == models.ALARM_STATUS_WARNING {
-		cluster.AlmWarnCount += 1
-	}
-
-	if clearedSeverity == models.ALARM_STATUS_MAJOR ||
-		clearedSeverity == models.ALARM_STATUS_CRITICAL {
-		if cluster.AlmCritCount > 0 {
-			cluster.AlmCritCount -= 1
-		}
-	} else if clearedSeverity == models.ALARM_STATUS_MINOR ||
-		clearedSeverity == models.ALARM_STATUS_WARNING {
-		if cluster.AlmWarnCount > 0 {
-			cluster.AlmWarnCount -= 1
-		}
-	}
-
-	if cluster.AlmCritCount > 0 {
-		cluster.AlmStatus = models.ALARM_STATUS_CRITICAL
-	} else if cluster.AlmWarnCount > 0 {
-		cluster.AlmStatus = models.ALARM_STATUS_WARNING
-	} else {
-		cluster.AlmStatus = models.ALARM_STATUS_CLEARED
-	}
+	cluster.AlmStatus, cluster.AlmWarnCount, cluster.AlmCritCount = getAlarmCountAndStatus(event.Severity,
+		clearedSeverity,
+		cluster.AlmCritCount,
+		cluster.AlmWarnCount)
 
 	if err := coll.Update(bson.M{"clusterid": event.ClusterId},
 		bson.M{"$set": cluster}); err != nil {
+		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
+		return err
+	}
+	return nil
+}
+
+func UpdateSluAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
+	var slu models.StorageLogicalUnit
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_LOGICAL_UNITS)
+	if err := coll.Find(bson.M{
+		"clusterid": event.ClusterId,
+		"sluid":     event.EntityId}).One(&slu); err != nil {
+		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+		return err
+	}
+
+	slu.AlmStatus, slu.AlmWarnCount, slu.AlmCritCount = getAlarmCountAndStatus(event.Severity,
+		clearedSeverity,
+		slu.AlmCritCount,
+		slu.AlmWarnCount)
+
+	if err := coll.Update(bson.M{"clusterid": event.ClusterId, "sluid": event.EntityId},
+		bson.M{"$set": slu}); err != nil {
+		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
+		return err
+	}
+	return nil
+}
+
+func UpdateStorageAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
+	var storage models.StorageLogicalUnit
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE)
+	if err := coll.Find(bson.M{
+		"clusterid": event.ClusterId,
+		"storageid": event.EntityId}).One(&storage); err != nil {
+		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+		return err
+	}
+
+	storage.AlmStatus, storage.AlmWarnCount, storage.AlmCritCount = getAlarmCountAndStatus(event.Severity,
+		clearedSeverity,
+		storage.AlmCritCount,
+		storage.AlmWarnCount)
+
+	if err := coll.Update(bson.M{"clusterid": event.ClusterId, "storageid": event.EntityId},
+		bson.M{"$set": storage}); err != nil {
 		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
 		return err
 	}
