@@ -21,7 +21,9 @@ import (
 )
 
 const (
-	aboutConfigFile = "about.conf"
+	ProviderConfDir   = "providers.d"
+	ProviderBinaryDir = "providers"
+	aboutConfigFile   = "about.conf"
 )
 
 type SkyringConfig struct {
