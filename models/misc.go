@@ -471,13 +471,16 @@ var StorageStatuses = [...]string{
 }
 
 const (
-	CURRENT_VALUE   = "CurrentValue"
-	CLUSTER_ID      = "ClusterId"
-	ENTITY_ID       = "EntityId"
-	PLUGIN          = "Plugin"
-	THRESHOLD_TYPE  = "ThresholdType"
-	THRESHOLD_VALUE = "ThresholdValue"
-	ENTITY_NAME     = "EntityName"
+	CURRENT_VALUE     = "CurrentValue"
+	CLUSTER_ID        = "ClusterId"
+	ENTITY_ID         = "EntityId"
+	PLUGIN            = "Plugin"
+	THRESHOLD_TYPE    = "ThresholdType"
+	THRESHOLD_VALUE   = "ThresholdValue"
+	ENTITY_NAME       = "EntityName"
+	CLUSTER_CONFIGS   = "cluster_configs"
+	THRESHOLD_CONFIGS = "threshold_configs"
+	NOTIFICATION_LIST = "notification_list"
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }
