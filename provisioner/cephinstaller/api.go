@@ -94,28 +94,25 @@ func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, n
 			defer wg.Done()
 			var route models.ApiRoute
 			hosts := []string{hostname}
+			data := make(map[string]interface{})
 			if util.StringInSlice(MON, node.NodeType) {
 				route = CEPH_INSTALLER_API_ROUTES["monInstall"]
+				data["calamari"] = true
 			} else if util.StringInSlice(OSD, node.NodeType) {
 				route = CEPH_INSTALLER_API_ROUTES["osdInstall"]
 			}
-			/*
-				TODO replace the map with commented code once the ceph-installer support
-				available
-			*/
-			/*data := InstallReq{Hosts: hosts,
-				RedhatStorage: conf.SystemConfig.Provisioners[providerName].RedhatStorage,
-				RedhatUseCdn:  conf.SystemConfig.Provisioners[providerName].RedhatUseCdn}
-			resp, body, errs := httprequest.Post(formUrl(route)).SendStruct(data).End()*/
-			data := make(map[string]interface{})
+
 			data["hosts"] = hosts
 			data["redhat_storage"] = conf.SystemConfig.Provisioners[providerName].RedhatStorage
-			jsonString, err := json.Marshal(data)
+
+			reqData, err := formConfigureData(data)
 			if err != nil {
-				logger.Get().Error("%s-Error marshalling data: %v", ctxt, err)
+				failedNodes = append(failedNodes, node)
 				return
 			}
-			resp, body, errs := httprequest.Post(formUrl(route)).Send(string(jsonString)).End()
+
+			resp, body, errs := httprequest.Post(formUrl(route)).Send(reqData).End()
+
 			respData, err := parseInstallResponseData(ctxt, resp, body, errs)
 			if err != nil {
 				syncMutex.Lock()
@@ -143,29 +140,26 @@ func (c CephInstaller) Configure(ctxt string, t *task.Task, reqType string, data
 		errs  []error
 		route models.ApiRoute
 	)
+	reqData, err := formConfigureData(data)
+	if err != nil {
+		return err
+	}
 	if reqType == MON {
 		route = CEPH_INSTALLER_API_ROUTES["monConfigure"]
-		jsonString, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		resp, body, errs = httprequest.Post(formUrl(route)).Send(jsonString).End()
 
 	} else if reqType == OSD {
-		route = CEPH_INSTALLER_API_ROUTES["osdConfigure	"]
-		jsonString, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		resp, body, errs = httprequest.Post(formUrl(route)).Send(jsonString).End()
+		route = CEPH_INSTALLER_API_ROUTES["osdConfigure"]
 
 	}
+
+	resp, body, errs = httprequest.Post(formUrl(route)).Send(reqData).End()
+
 	respData, err := parseInstallResponseData(ctxt, resp, body, errs)
 	if err != nil {
 		return err
 	}
 	if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
-		return err
+		return errors.New("MON Configuration Failed")
 	}
 	return nil
 }
@@ -225,15 +219,25 @@ func parseInstallResponseData(ctxt string, resp *http.Response, body string, err
 	var respData Task
 	if len(errs) > 0 {
 		logger.Get().Error("%s-Error Installing Packages:%v", ctxt, errs)
-		return respData, errors.New("Error Installing Packages")
+		return respData, errors.New("Error Sending ceph-installer request")
 	}
 	if resp.StatusCode != http.StatusOK {
-		logger.Get().Error("%s-Error Installing Packages", ctxt)
-		return respData, errors.New("Error Installing Packages. Ceph-installer failed")
+		logger.Get().Error("%s-Error Sending ceph-installer request", ctxt)
+		return respData, errors.New("Error Sending ceph-installer request. Ceph-installer failed")
 	}
 	if err := json.Unmarshal([]byte(body), &respData); err != nil {
 		logger.Get().Error("%s-Unable to unmarshal response. error: %v", ctxt, err)
 		return respData, errors.New("Unable to unmarshal response")
 	}
 	return respData, nil
+}
+
+func formConfigureData(data map[string]interface{}) (string, error) {
+
+	request, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(request), nil
+
 }
