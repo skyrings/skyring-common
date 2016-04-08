@@ -21,6 +21,7 @@ const (
 	USAGE_PERCENTAGE            = "percent-used"
 	CLUSTER_UTILIZATION         = "cluster_utilization"
 	SLU_UTILIZATION             = "slu_utilization"
+	BLOCK_DEVICE_UTILIZATION    = "block_device_utilization"
 	STORAGE_UTILIZATION         = "storage_utilization"
 	FREE_SPACE                  = "free_bytes"
 	USED_SPACE                  = "used_bytes"
