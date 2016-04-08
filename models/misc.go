@@ -148,6 +148,7 @@ type AppEvent struct {
 	NodeName           string             `json:"nodename"`
 	Timestamp          time.Time          `json:"timestamp"`
 	Name               string             `json:"name"`
+	Context            string             `json:"context"`
 	Tags               map[string]string  `json:"tags"`
 	Message            string             `json:"message"`
 	Description        string             `json:"description"`

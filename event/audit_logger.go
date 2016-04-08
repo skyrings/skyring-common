@@ -26,12 +26,15 @@ import (
 func AuditLog(ctxt string, event models.AppEvent, dbprovider dbprovider.DbInterface) error {
 	sessionCopy := db.GetDatastore().Copy()
 	defer sessionCopy.Close()
-	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_CLUSTERS)
-	var cluster models.Cluster
-	if err := coll.Find(bson.M{"clusterid": event.ClusterId}).One(&cluster); err == nil {
-		event.ClusterName = cluster.Name
+	if event.ClusterName == "" {
+		coll := sessionCopy.DB(
+			conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_CLUSTERS)
+		var cluster models.Cluster
+		if err := coll.Find(bson.M{"clusterid": event.ClusterId}).One(&cluster); err == nil {
+			event.ClusterName = cluster.Name
+		}
 	}
-
+	event.Context = ctxt
 	if event.Notify {
 		subject, body, err := getMailDetails(event)
 		if err != nil {
@@ -45,7 +48,7 @@ func AuditLog(ctxt string, event models.AppEvent, dbprovider dbprovider.DbInterf
 		}
 	}
 
-	coll = sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_APP_EVENTS)
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_APP_EVENTS)
 	if err := coll.Insert(event); err != nil {
 		logger.Get().Error("%s-Error adding the app event: %v", ctxt, err)
 		return err
