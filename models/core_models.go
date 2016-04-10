@@ -276,3 +276,8 @@ type Directory struct {
 	DisplayName string
 	Email       string
 }
+
+type ClusterNotificationSubscription struct {
+	ClusterId     uuid.UUID                  `json:"clusterid"`
+	Notifications []NotificationSubscription `json:"notifications"`
+}
