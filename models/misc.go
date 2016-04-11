@@ -227,6 +227,11 @@ const (
 	Monitor                    = "monitor"
 	Mon                        = "mon"
 	Yes                        = "Y"
+	TotalSLU                   = "TotalSLU"
+	ErrorSLU                   = "ErrorSLU"
+	WarningSLU                 = "WarningSLU"
+	DownSLU                    = "DownSLU"
+	SLU_STATE_DOWN             = "Out"
 )
 
 type Clusters []Cluster
