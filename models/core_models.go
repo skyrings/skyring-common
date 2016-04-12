@@ -20,6 +20,7 @@ import (
 
 type Node struct {
 	NodeId                uuid.UUID         `json:"nodeid"`
+	Roles                 []string          `json:"roles"`
 	Hostname              string            `json:"hostname"`
 	Tags                  []string          `json:"tags"`
 	ManagementIP4         string            `json:"management_ip4"`
