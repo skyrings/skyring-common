@@ -29,6 +29,10 @@ const (
 type SkyringConfig struct {
 	Host              string `json:"host"`
 	HttpPort          int    `json:"httpPort"`
+	SSLEnabled        bool   `json:"sslEnabled"`
+	SslPort           int    `json:"sslPort"`
+	SslCert           string `json:"sslCert"`
+	SslKey            string `json:"sslKey"`
 	SupportedVersions []int  `json:"supportedversions"`
 }
 
