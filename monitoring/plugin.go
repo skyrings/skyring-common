@@ -41,6 +41,7 @@ const (
 	PG_SUMMARY                  = "pg_summary"
 	Latest                      = "latest"
 	MEMORY                      = "memory"
+	SWAP                        = "swap"
 	CPU_USER                    = "cpu-user"
 	USED                        = "used"
 	TOTAL                       = "total"
@@ -57,6 +58,7 @@ const (
 	WARNING                     = "warning"
 	OK                          = "ok"
 	THRESHOLD                   = "threshold"
+	CPU                         = "cpu"
 )
 
 var (
@@ -77,7 +79,7 @@ var (
 		"cpu",
 		"disk",
 		"network",
-		"swap",
+		SWAP,
 	}
 
 	MonitoringWritePlugin = "dbpush"

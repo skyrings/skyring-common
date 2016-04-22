@@ -110,6 +110,8 @@ var resourceCollectionNameMapper = map[string]string{
 	monitoring.AGGREGATION + monitoring.INTERFACE + monitoring.OCTETS + monitoring.TX: "interface*.if_octets.tx",
 	monitoring.AGGREGATION + monitoring.DISK + monitoring.READ:                        "disk-*.disk_ops.read",
 	monitoring.AGGREGATION + monitoring.DISK + monitoring.WRITE:                       "disk-*.disk_ops.write",
+	monitoring.AGGREGATION + monitoring.MEMORY:                                        "aggregation-memory-sum.memory",
+	monitoring.AGGREGATION + monitoring.SWAP:                                          "aggregation-swap-sum.swap",
 }
 
 func (tsdbm GraphiteManager) GetResourceName(params map[string]interface{}) (string, error) {

@@ -19,30 +19,29 @@ import (
 )
 
 type Node struct {
-	NodeId                uuid.UUID         `json:"nodeid"`
-	Roles                 []string          `json:"roles"`
-	Hostname              string            `json:"hostname"`
-	Tags                  []string          `json:"tags"`
-	ManagementIP4         string            `json:"management_ip4"`
-	ClusterIP4            string            `json:"cluster_ip4"`
-	PublicIP4             string            `json:"public_ip4"`
-	ClusterId             uuid.UUID         `json:"clusterid"`
-	Location              string            `json:"location"`
-	Status                NodeStatus        `json:"status"`
-	State                 NodeState         `json:"state"`
-	AlmStatus             AlarmStatus       `json:"almstatus"`
-	AlmWarnCount          int               `json:"almwarncount"`
-	AlmCritCount          int               `json:"almcritcount"`
-	Options               map[string]string `json:"options"`
-	CPUs                  []Cpu             `json:"cpus"`
-	NetworkInfo           Network           `json:"network_info"`
-	StorageDisks          []Disk            `json:"storage_disks"`
-	Memory                Memory            `json:"memory"`
-	OS                    OperatingSystem   `json:"os"`
-	Enabled               bool              `json:"enabled"`
-	Fingerprint           string            `json:"saltfingerprint"`
-	MemoryPercentageUsage float64           `json:"memorypercentageusage"`
-	CpuPercentageUsage    float64           `json:"cpupercentageusage"`
+	NodeId        uuid.UUID              `json:"nodeid"`
+	Roles         []string               `json:"roles"`
+	Hostname      string                 `json:"hostname"`
+	Tags          []string               `json:"tags"`
+	ManagementIP4 string                 `json:"management_ip4"`
+	ClusterIP4    string                 `json:"cluster_ip4"`
+	PublicIP4     string                 `json:"public_ip4"`
+	ClusterId     uuid.UUID              `json:"clusterid"`
+	Location      string                 `json:"location"`
+	Status        NodeStatus             `json:"status"`
+	State         NodeState              `json:"state"`
+	AlmStatus     AlarmStatus            `json:"almstatus"`
+	AlmWarnCount  int                    `json:"almwarncount"`
+	AlmCritCount  int                    `json:"almcritcount"`
+	Options       map[string]string      `json:"options"`
+	CPUs          []Cpu                  `json:"cpus"`
+	NetworkInfo   Network                `json:"network_info"`
+	StorageDisks  []Disk                 `json:"storage_disks"`
+	Memory        Memory                 `json:"memory"`
+	OS            OperatingSystem        `json:"os"`
+	Enabled       bool                   `json:"enabled"`
+	Fingerprint   string                 `json:"saltfingerprint"`
+	Utilizations  map[string]interface{} `json:"utilizations"`
 }
 
 type Network struct {
@@ -129,6 +128,7 @@ type Cluster struct {
 	ObjectCount         map[string]int64       `json:"objectcount"`
 	AutoExpand          bool                   `json:"autoexpand"`
 	JournalSize         string                 `json:"journalsize"`
+	Utilizations        map[string]interface{} `json:"utilizations"`
 }
 
 type System struct {
@@ -141,6 +141,7 @@ type System struct {
 	ClustersCount             map[string]int                    `json:"clusterscount"`
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
+	Utilizations              map[string]interface{}            `json:"utilizations"`
 }
 
 type Utilization struct {

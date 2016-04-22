@@ -52,6 +52,7 @@ type ClusterSummary struct {
 	SLUCount                  map[string]int                    `json:"slucount"`
 	NodesCount                map[string]int                    `json:"nodescount"`
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
+	Utilizations              map[string]interface{}            `json:"utilizations"`
 }
 
 type StorageUsage struct {
@@ -494,6 +495,7 @@ const (
 	CLUSTER_CONFIGS   = "cluster_configs"
 	THRESHOLD_CONFIGS = "threshold_configs"
 	NOTIFICATION_LIST = "notification_list"
+	UTILIZATIONS      = "utilizations"
 	NOTIFY            = "Notify"
 	WARNING           = "WARNING"
 	OK                = "OK"
