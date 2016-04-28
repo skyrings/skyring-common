@@ -41,7 +41,7 @@ type Node struct {
 	OS            OperatingSystem        `json:"os"`
 	Enabled       bool                   `json:"enabled"`
 	Fingerprint   string                 `json:"saltfingerprint"`
-	Utilizations  map[string]interface{} `json:"utilizations"`
+	Utilizations  map[string]Utilization `json:"utilizations"`
 }
 
 type Network struct {

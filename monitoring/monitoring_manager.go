@@ -24,6 +24,9 @@ var GeneralResources = []string{
 	PG_SUMMARY,
 	"ping",
 	"interface",
+	STORAGE_UTILIZATION,
+	fmt.Sprintf("aggregation-%s-%s", MEMORY, SUM),
+	fmt.Sprintf("aggregation-%s-%s", SWAP, SUM),
 }
 
 var (

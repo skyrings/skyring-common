@@ -238,7 +238,7 @@ func GetRequestPath(params map[string]interface{}) (string, error) {
 		} else {
 			return "", fmt.Errorf("Not supported")
 		}
-		urlTime, urlTimeError := GetTemplateParsedString(map[string]interface{}{"start_time": params["interval"]}, templ)
+		urlTime, urlTimeError := GetValidatedGraphiteSupportedTime(timeString, templ)
 		if urlTimeError != nil {
 			return "", urlTimeError
 		}

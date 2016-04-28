@@ -59,6 +59,7 @@ const (
 	OK                          = "ok"
 	THRESHOLD                   = "threshold"
 	CPU                         = "cpu"
+	SUM                         = "sum"
 )
 
 var (

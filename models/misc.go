@@ -503,3 +503,13 @@ const (
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }
+
+type CollectdSingleValuedMetric struct {
+	Used        string `json:"Used"`
+	Total       string `json:"Total"`
+	PercentUsed string `json:"PercentUsed"`
+}
+
+type CollectdCpuMetric struct {
+	PercentUsed string `json:"PercentUsed"`
+}
