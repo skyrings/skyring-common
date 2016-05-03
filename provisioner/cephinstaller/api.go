@@ -120,6 +120,13 @@ func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, n
 				failedNodes = append(failedNodes, node)
 				return
 			}
+			logger.Get().Info(
+				"%s-Started installation on node :%s. TaskId: %s. Request Data: %v. Route: %s",
+				ctxt,
+				hostname,
+				respData.Identifier,
+				data,
+				formUrl(route))
 			if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
 				syncMutex.Lock()
 				defer syncMutex.Unlock()
@@ -158,6 +165,13 @@ func (c CephInstaller) Configure(ctxt string, t *task.Task, reqType string, data
 	if err != nil {
 		return err
 	}
+	logger.Get().Info(
+		"%s-Started configuration on node: %s. TaskId: %s. Request Data: %v. Route: %s",
+		ctxt,
+		data["host"].(string),
+		respData.Identifier,
+		reqData,
+		formUrl(route))
 	if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
 		return errors.New("MON Configuration Failed")
 	}
