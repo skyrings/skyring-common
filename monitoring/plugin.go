@@ -60,6 +60,7 @@ const (
 	THRESHOLD                   = "threshold"
 	CPU                         = "cpu"
 	SUM                         = "sum"
+	NETWORK                     = "network"
 )
 
 var (
