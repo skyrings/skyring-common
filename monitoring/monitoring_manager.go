@@ -18,6 +18,7 @@ var GeneralResources = []string{
 	"network",
 	"swap",
 	CLUSTER_UTILIZATION,
+	SYSTEM_UTILIZATION,
 	STORAGE_PROFILE_UTILIZATION,
 	SLU_UTILIZATION,
 	NO_OF_OBJECT,
