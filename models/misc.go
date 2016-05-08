@@ -52,7 +52,7 @@ type ImportClusterRequest struct {
 type ClusterSummary struct {
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
 	Usage                     Utilization                       `json:"usage"`
-	StorageProfileUsage       map[string]Utilization            `json:"storageprofileusage"`
+	StorageProfileUsage       map[string]map[string]interface{} `json:"storageprofileusage"`
 	ObjectCount               map[string]int64                  `json:"objectcount"`
 	StorageCount              map[string]int                    `json:"storagecount"`
 	SLUCount                  map[string]int                    `json:"slucount"`
@@ -522,6 +522,7 @@ const (
 	WARNING           = "WARNING"
 	OK                = "OK"
 	CRITICAL          = "CRITICAL"
+	NEAR_FULL         = "nearfull"
 )
 
 func (s StorageStatus) String() string { return StorageStatuses[s] }

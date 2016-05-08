@@ -134,7 +134,7 @@ type Cluster struct {
 type System struct {
 	Name                      string                            `json:"name"`
 	Usage                     Utilization                       `json:"usage"`
-	StorageProfileUsage       map[string]Utilization            `json:"storageprofileusage"`
+	StorageProfileUsage       map[string]map[string]interface{} `json:"storageprofileusage"`
 	StorageCount              map[string]int                    `json:"storagecount"`
 	SLUCount                  map[string]int                    `json:"slucount"`
 	NodesCount                map[string]int                    `json:"nodescount"`
