@@ -252,6 +252,7 @@ const (
 	Monitor                    = "monitor"
 	Mon                        = "mon"
 	Yes                        = "Y"
+	No                         = "N"
 	TotalSLU                   = "TotalSLU"
 	ErrorSLU                   = "ErrorSLU"
 	WarningSLU                 = "WarningSLU"
