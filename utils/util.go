@@ -342,6 +342,14 @@ func getEntityIdFromNameAndUtilizationType(utilizationType string, resourceName 
 		return &(storage.StorageId), nil
 	case monitoring.STORAGE_PROFILE_UTILIZATION:
 		return &(cluster.ClusterId), nil
+	case monitoring.BLOCK_DEVICE_UTILIZATION:
+		var bDevice models.BlockDevice
+		err := getEntity(cluster.ClusterId, resourceName, models.COLL_NAME_BLOCK_DEVICES, &bDevice)
+		if err != nil {
+			return nil, fmt.Errorf("Could not fetch block device with name %v in cluster %v.Error %v",
+				resourceName, cluster.Name, err)
+		}
+		return &(bDevice.Id), nil
 	}
 	return nil, fmt.Errorf("Unsupported utilization type %v", utilizationType)
 }
