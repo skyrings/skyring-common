@@ -138,7 +138,7 @@ func getUrlBaseTemplateParams(params map[string]interface{}) (map[string]interfa
 		"resourcename":   params["resource"],
 	}
 	if parentName, ok := params["parentName"]; ok {
-		templateParams["parentname"] = parentName
+		templateParams["parentname"] = strings.Replace(parentName.(string), ".", "_", -1)
 		templateString = targetWithParent
 	}
 	target, targetErr := GetTemplateParsedString(templateParams, templateString)

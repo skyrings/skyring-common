@@ -243,7 +243,17 @@ func UpdateThresholdInfoToTable(tEvent models.ThresholdEvent) (err error, isRais
 func AnalyseThresholdBreach(ctxt string, utilizationType string, resourceName string, resourceUtilization float64, cluster models.Cluster) (models.Event, bool, error) {
 	var event models.Event
 	timeStamp := time.Now()
-	plugin := cluster.Monitoring.Plugins[monitoring.GetPluginIndex(utilizationType, cluster.Monitoring.Plugins)]
+	pluginIndex := monitoring.GetPluginIndex(utilizationType, cluster.Monitoring.Plugins)
+	if pluginIndex == -1 {
+		logger.Get().Error(
+			"%s - The cluster %s is not configured to monitor threshold breaches for %v and hence cannot monitor utilization of %v",
+			ctxt, cluster.Name, utilizationType, resourceName)
+		return models.Event{}, false,
+			fmt.Errorf(
+				"%s - The cluster %s is not configured to monitor threshold breaches for %v and hence cannot monitor utilization of %v",
+				ctxt, cluster.Name, utilizationType, resourceName)
+	}
+	plugin := cluster.Monitoring.Plugins[pluginIndex]
 	var applicableConfig monitoring.PluginConfig
 	var applicableThresholdValue float64
 	var message string
@@ -257,6 +267,11 @@ func AnalyseThresholdBreach(ctxt string, utilizationType string, resourceName st
 			ctxt, resourceName, cluster.Name)
 	}
 	entityIdentifier = (*entityId).String()
+
+	if len(plugin.Configs) == 0 {
+		return models.Event{}, false, fmt.Errorf("%s - No threshold configurations found for %v of %v in cluster %v",
+			ctxt, utilizationType, resourceName, cluster.Name)
+	}
 
 	for _, config := range plugin.Configs {
 		if config.Category == monitoring.THRESHOLD {

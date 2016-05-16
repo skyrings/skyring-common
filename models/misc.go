@@ -50,6 +50,8 @@ type ImportClusterRequest struct {
 }
 
 type ClusterSummary struct {
+	ClusterId                 uuid.UUID                         `json:"clusterid"`
+	Name                      string                            `json:"name"`
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
 	Usage                     Utilization                       `json:"usage"`
 	StorageProfileUsage       map[string]map[string]interface{} `json:"storageprofileusage"`
@@ -229,6 +231,7 @@ const (
 	COLL_NAME_STORAGE_NODES                      = "storage_nodes"
 	COLL_NAME_STORAGE_CLUSTERS                   = "storage_clusters"
 	COLL_NAME_SKYRING_UTILIZATION                = "skyring_utilization"
+	COLL_NAME_CLUSTER_SUMMARY                    = "cluster_summary"
 	COLL_NAME_STORAGE_LOGICAL_UNITS              = "storage_logical_units"
 	COLL_NAME_TASKS                              = "tasks"
 	COLL_NAME_SESSION_STORE                      = "skyring_session_store"
