@@ -212,3 +212,28 @@ func UpdateStorageAlarmCount(event models.AppEvent, clearedSeverity models.Alarm
 	}
 	return nil
 }
+
+func UpdateBlockDeviceAlarmCount(event models.AppEvent, clearedSeverity models.AlarmStatus, ctxt string) error {
+	var BlkDev models.BlockDevice
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_BLOCK_DEVICES)
+	if err := coll.Find(bson.M{
+		"clusterid": event.ClusterId,
+		"id":        event.EntityId}).One(&BlkDev); err != nil {
+		logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
+		return err
+	}
+
+	BlkDev.AlmStatus, BlkDev.AlmWarnCount, BlkDev.AlmCritCount = getAlarmCountAndStatus(event.Severity,
+		clearedSeverity,
+		BlkDev.AlmCritCount,
+		BlkDev.AlmWarnCount)
+
+	if err := coll.Update(bson.M{"clusterid": event.ClusterId, "id": event.EntityId},
+		bson.M{"$set": BlkDev}); err != nil {
+		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
+		return err
+	}
+	return nil
+}

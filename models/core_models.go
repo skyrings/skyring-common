@@ -217,6 +217,9 @@ type BlockDevice struct {
 	QuotaParams         map[string]string `json:"quota_params"`
 	Options             map[string]string `json:"options"`
 	Usage               Utilization       `json:"usage"`
+	AlmStatus           AlarmStatus       `json:"almstatus"`
+	AlmWarnCount        int               `json:"almwarncount"`
+	AlmCritCount        int               `json:"almcritcount"`
 }
 
 type SnapshotSchedule struct {

@@ -467,6 +467,9 @@ var NotificationEntities = [...]string{
 	"Slu",
 	"Storage",
 	"User",
+	"Block Device",
+	"Storage Profile",
+	"Mail Notifier",
 }
 
 func (s NotificationEntity) String() string { return NotificationEntities[s] }
