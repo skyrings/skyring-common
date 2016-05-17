@@ -36,9 +36,10 @@ type ProviderConfig struct {
 }
 
 type ProviderInfo struct {
-	Provider    ProviderConfig    `json:"provider"`
-	Routes      []Route           `json:"routes"`
-	Provisioner ProvisionerConfig `json:"provisioner"`
+	Provider        ProviderConfig         `json:"provider"`
+	Routes          []Route                `json:"routes"`
+	Provisioner     ProvisionerConfig      `json:"provisioner"`
+	ProviderOptions map[string]interface{} `json:"provideroptions"`
 }
 
 func LoadProviderConfig(providerConfigDir string) []ProviderInfo {
