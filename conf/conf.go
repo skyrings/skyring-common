@@ -105,6 +105,8 @@ type SystemCapabilities struct {
 	StorageProviderDetails map[string]string `bson:"providerversion",json:"providerversion"`
 	DbSoftware             string            `bson:"dbsoftware",json:"dbsoftware"`
 	DbSoftwareVersion      string            `bson:"dbsoftwareversion",json:"dbsoftwareversion"`
+	MonitoringSoftware     string            `bson:"monitoringsoftware",json:"monitoringsoftware"`
+	MonitoringSoftwareVer  string            `bson:"monitoringsoftwarever",json:"monitoringsoftwarever"`
 }
 
 var (
