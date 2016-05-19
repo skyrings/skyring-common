@@ -272,6 +272,7 @@ type ExternalUsers struct {
 
 type Directory struct {
 	LdapServer  string
+	Type        string
 	Port        uint
 	Base        string
 	DomainAdmin string
