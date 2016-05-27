@@ -459,5 +459,8 @@ func (tsdbm GraphiteManager) PushToDb(metrics map[string]map[string]string, host
 		return fmt.Errorf("%v", err)
 	}
 	Graphite.SendMetrics(data)
+	if err := Graphite.Disconnect(); err != nil {
+		logger.Get().Warning("Failed to disconnect the graphite conn.Error %v", err)
+	}
 	return nil
 }
