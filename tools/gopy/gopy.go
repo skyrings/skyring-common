@@ -6,6 +6,7 @@ import (
 	"github.com/sbinet/go-python"
 	"os"
 	"reflect"
+	"time"
 )
 
 type PyFunction struct {
@@ -28,6 +29,21 @@ func (f *PyFunction) Call(args ...interface{}) (r *python.PyObject, err error) {
 		python.PyErr_Clear()
 	}
 	return
+}
+
+func (f *PyFunction) CallWithTimeOut(timeOut time.Duration, args ...interface{}) (r *python.PyObject, err error) {
+	chSuccess := make(chan bool)
+	go func() {
+		r, err = f.Call(args...)
+		chSuccess <- true
+	}()
+	select {
+	case <-chSuccess:
+		return
+	case <-time.After(timeOut):
+		err = errors.New(fmt.Sprintf("Request timed out"))
+		return
+	}
 }
 
 var pyinit = false
