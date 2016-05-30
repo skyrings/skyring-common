@@ -68,6 +68,19 @@ type StorageUsage struct {
 	Usage Utilization `json:"usage"`
 }
 
+type DiskHierarchyRequest struct {
+	ClusterName  string        `json:"clustername"`
+	ClusterType  string        `json:"clustertype"`
+	JournalSize  string        `json:"journals"`
+	ClusterNodes []ClusterNode `json:"clusternodes"`
+}
+
+type DiskHierarchyDetails struct {
+	ClusterName string                       `json:"clustername"`
+	Hierarchy   map[string]map[string]string `json:"hierarchy"`
+	StorageSize uint64                       `json:"storagesize"`
+}
+
 type ClusterNode struct {
 	NodeId   string              `json:"nodeid"`
 	NodeType []string            `json:"nodetype"`
