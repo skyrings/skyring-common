@@ -58,6 +58,7 @@ type ClusterSummary struct {
 	ObjectCount               map[string]int64                  `json:"objectcount"`
 	StorageCount              map[string]int                    `json:"storagecount"`
 	SLUCount                  map[string]int                    `json:"slucount"`
+	MonitoringPlugins         []monitoring.Plugin               `json:"monitoringplugins"`
 	NodesCount                map[string]int                    `json:"nodescount"`
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 	Utilizations              map[string]interface{}            `json:"utilizations"`

@@ -139,6 +139,7 @@ type System struct {
 	SLUCount                  map[string]int                    `json:"slucount"`
 	NodesCount                map[string]int                    `json:"nodescount"`
 	ClustersCount             map[string]int                    `json:"clusterscount"`
+	MonitoringPlugins         map[string]monitoring.Plugin      `json:"monitoringplugins"`
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
 	Utilizations              map[string]interface{}            `json:"utilizations"`
