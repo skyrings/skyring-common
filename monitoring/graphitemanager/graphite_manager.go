@@ -112,6 +112,9 @@ var resourceCollectionNameMapper = map[string]string{
 	monitoring.AGGREGATION + monitoring.DISK + monitoring.WRITE:                       "disk-*.disk_ops.write",
 	monitoring.AGGREGATION + monitoring.MEMORY:                                        "aggregation-memory-sum.memory",
 	monitoring.AGGREGATION + monitoring.SWAP:                                          "aggregation-swap-sum.swap",
+	monitoring.AVERAGE + monitoring.INTERFACE + monitoring.USED:                       "interface-average.bytes-total_bandwidth_used",
+	monitoring.AVERAGE + monitoring.INTERFACE + monitoring.TOTAL:                      "interface-average.bytes-total_bandwidth",
+	monitoring.AVERAGE + monitoring.INTERFACE + monitoring.PERCENT:                    "interface-average.percent-network_utilization",
 }
 
 func (tsdbm GraphiteManager) GetResourceName(params map[string]interface{}) (string, error) {
@@ -346,6 +349,18 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 				statVar = append(statVar, 0)
 				metrics[metricIndex].Target = targetContents[0]
 				metrics[metricIndex].Stats = stats([]stat{statVar})
+			}
+		} else {
+			// Filter out all null values
+			for metricIndex := range metrics {
+				deleted := 0
+				for statIndex := range metrics[metricIndex].Stats {
+					j := statIndex - deleted
+					if metrics[metricIndex].Stats[j][0] == nil {
+						metrics[metricIndex].Stats = metrics[metricIndex].Stats[:j+copy(metrics[metricIndex].Stats[j:], metrics[metricIndex].Stats[j+1:])]
+						deleted++
+					}
+				}
 			}
 		}
 		return metrics, nil

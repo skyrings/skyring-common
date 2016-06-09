@@ -62,6 +62,8 @@ const (
 	CPU                         = "cpu"
 	SUM                         = "sum"
 	NETWORK                     = "network"
+	AVERAGE                     = "average"
+	PERCENT                     = "percent"
 )
 
 var (
