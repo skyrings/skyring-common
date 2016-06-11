@@ -70,7 +70,7 @@ func LoadProviderConfig(providerConfigDir string) []ProviderInfo {
 			collection = append(collection, data)
 			SystemConfig.Provisioners[data.Provider.Name] = data.Provisioner
 			data = ProviderInfo{}
-		} else {
+		} else if strings.HasSuffix(f.Name(), ".dat") {
 			if SystemConfig.SysCapabilities.ProductName != "" {
 				provider_name := strings.TrimSuffix(f.Name(), filepath.Ext(f.Name()))
 				version := make(map[string]string)
