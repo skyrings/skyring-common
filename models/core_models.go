@@ -19,29 +19,30 @@ import (
 )
 
 type Node struct {
-	NodeId        uuid.UUID              `json:"nodeid"`
-	Roles         []string               `json:"roles"`
-	Hostname      string                 `json:"hostname"`
-	Tags          []string               `json:"tags"`
-	ManagementIP4 string                 `json:"management_ip4"`
-	ClusterIP4    string                 `json:"cluster_ip4"`
-	PublicIP4     string                 `json:"public_ip4"`
-	ClusterId     uuid.UUID              `json:"clusterid"`
-	Location      string                 `json:"location"`
-	Status        NodeStatus             `json:"status"`
-	State         NodeState              `json:"state"`
-	AlmStatus     AlarmStatus            `json:"almstatus"`
-	AlmWarnCount  int                    `json:"almwarncount"`
-	AlmCritCount  int                    `json:"almcritcount"`
-	Options       map[string]string      `json:"options"`
-	CPUs          []Cpu                  `json:"cpus"`
-	NetworkInfo   Network                `json:"network_info"`
-	StorageDisks  []Disk                 `json:"storage_disks"`
-	Memory        Memory                 `json:"memory"`
-	OS            OperatingSystem        `json:"os"`
-	Enabled       bool                   `json:"enabled"`
-	Fingerprint   string                 `json:"saltfingerprint"`
-	Utilizations  map[string]Utilization `json:"utilizations"`
+	NodeId            uuid.UUID              `json:"nodeid"`
+	Roles             []string               `json:"roles"`
+	Hostname          string                 `json:"hostname"`
+	Tags              []string               `json:"tags"`
+	ManagementIP4     string                 `json:"management_ip4"`
+	ClusterIP4        string                 `json:"cluster_ip4"`
+	PublicIP4         string                 `json:"public_ip4"`
+	ClusterId         uuid.UUID              `json:"clusterid"`
+	Location          string                 `json:"location"`
+	Status            NodeStatus             `json:"status"`
+	State             NodeState              `json:"state"`
+	AlmStatus         AlarmStatus            `json:"almstatus"`
+	AlmWarnCount      int                    `json:"almwarncount"`
+	AlmCritCount      int                    `json:"almcritcount"`
+	Options           map[string]string      `json:"options"`
+	CPUs              []Cpu                  `json:"cpus"`
+	NetworkInfo       Network                `json:"network_info"`
+	StorageDisks      []Disk                 `json:"storage_disks"`
+	Memory            Memory                 `json:"memory"`
+	OS                OperatingSystem        `json:"os"`
+	Enabled           bool                   `json:"enabled"`
+	Fingerprint       string                 `json:"saltfingerprint"`
+	Utilizations      map[string]Utilization `json:"utilizations"`
+	ServiceStatusList map[string][]string    `json:"servicestatuslist"`
 }
 
 type Network struct {

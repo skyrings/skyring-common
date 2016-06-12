@@ -406,3 +406,43 @@ func GetReadableFloat(str string, ctxt string) (string, error) {
 	}
 	return fmt.Sprintf("%.2f", f), nil
 }
+
+func AppendServiceToNode(selectCriteria bson.M, serviceName string, status string, ctxt string) {
+	var node models.Node
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_STORAGE_NODES)
+	if err := coll.Find(selectCriteria).One(&node); err != nil {
+		logger.Get().Error("%s - Failed to append the service %v to node with criterion %v.Error %v", ctxt, serviceName, selectCriteria, err)
+		return
+	}
+	// If the required status key is not yet present in status to service list map, add the same
+	if _, ok := node.ServiceStatusList[status]; !ok {
+		node.ServiceStatusList[status] = []string{serviceName}
+	}
+	for currentStatus, servicesInCurrentStatus := range node.ServiceStatusList {
+		// Ensure 0 duplication
+		if currentStatus == status {
+			// Append iff the append requested service is not present in the list of services under the required status
+			if !StringInSlice(serviceName, servicesInCurrentStatus) {
+				node.ServiceStatusList[currentStatus] = append(node.ServiceStatusList[currentStatus], serviceName)
+			}
+		} else {
+			//Check if the service is already present under another status and remove it
+			indexOfServiceToRemove := -1
+			for serviceIndex, service := range servicesInCurrentStatus {
+				if service == serviceName {
+					indexOfServiceToRemove = serviceIndex
+				}
+			}
+			if indexOfServiceToRemove != -1 {
+				node.ServiceStatusList[currentStatus] = append(servicesInCurrentStatus[:indexOfServiceToRemove], servicesInCurrentStatus[indexOfServiceToRemove+1:]...)
+			}
+		}
+	}
+	if err := coll.Update(
+		selectCriteria,
+		bson.M{"$set": bson.M{"servicestatuslist": node.ServiceStatusList}}); err != nil {
+		logger.Get().Error("%s-Error updating the service %v of status %v for node with criterion %v. error: %v", ctxt, serviceName, status, selectCriteria, err)
+	}
+}

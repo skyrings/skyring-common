@@ -554,6 +554,11 @@ type CollectdSingleValuedMetric struct {
 	PercentUsed string `json:"PercentUsed"`
 }
 
+var SkyringServices = [...]string{
+	"collectd",
+	"salt-minion",
+}
+
 type CollectdCpuMetric struct {
 	PercentUsed string `json:"PercentUsed"`
 }
