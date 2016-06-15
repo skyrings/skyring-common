@@ -30,7 +30,6 @@ func (m MongoDb) User(username string) (user models.User, e error) {
 	defer m.Close(c)
 	err := c.Find(bson.M{"username": username}).One(&user)
 	if err != nil {
-		logger.Get().Error("Error getting record from DB for user: %s. error: %v", username, err)
 		return user, ErrMissingUser
 	}
 	return user, nil
