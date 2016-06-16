@@ -27,7 +27,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -74,8 +74,45 @@ func New(config io.Reader) (*CephInstaller, error) {
 	return installer, nil
 }
 
-func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, nodes []models.ClusterNode) []models.ClusterNode {
+func installNode(node models.ClusterNode, hostname string, providerName string, ctxt string) bool {
+	var route models.ApiRoute
+	hosts := []string{hostname}
+	data := make(map[string]interface{})
+	if util.StringInSlice(MON, node.NodeType) {
+		route = CEPH_INSTALLER_API_ROUTES["monInstall"]
+		data["calamari"] = true
+	} else if util.StringInSlice(OSD, node.NodeType) {
+		route = CEPH_INSTALLER_API_ROUTES["osdInstall"]
+	}
 
+	data["hosts"] = hosts
+	data["redhat_storage"] = conf.SystemConfig.Provisioners[providerName].RedhatStorage
+
+	reqData, err := formConfigureData(data)
+	if err != nil {
+		return false
+	}
+
+	resp, body, errs := httprequest.Post(formUrl(route)).Send(reqData).End()
+
+	respData, err := parseInstallResponseData(ctxt, resp, body, errs)
+	if err != nil {
+		return false
+	}
+	logger.Get().Info(
+		"%s-Started installation on node :%s. TaskId: %s. Request Data: %v. Route: %s",
+		ctxt,
+		hostname,
+		respData.Identifier,
+		data,
+		formUrl(route))
+	if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
+		return false
+	}
+	return true
+}
+
+func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, nodes []models.ClusterNode) []models.ClusterNode {
 	db_nodes, err := util.GetNodesByIdStr(nodes)
 	if err != nil {
 		logger.Get().Error("%s-Error getting nodes while package installation: %v", ctxt, err)
@@ -83,63 +120,79 @@ func (c CephInstaller) Install(ctxt string, t *task.Task, providerName string, n
 	}
 
 	var (
-		wg          sync.WaitGroup
+		//wg          sync.WaitGroup
 		failedNodes []models.ClusterNode
-		syncMutex   sync.Mutex
+		//syncMutex   sync.Mutex
 	)
+	// The below code segment invokes the ceph-installer
+	// parallely as seperate go-routines for each node available.
+	// But since ceph-installer is not capable of parallely installing
+	// the nodes. So till that capability is added to ceph-installer
+	// this can be invoked serially
+
+	/*
+		for _, node := range nodes {
+			wg.Add(1)
+			go func(node models.ClusterNode, hostname string) {
+				defer wg.Done()
+				var route models.ApiRoute
+				hosts := []string{hostname}
+				data := make(map[string]interface{})
+				if util.StringInSlice(MON, node.NodeType) {
+					route = CEPH_INSTALLER_API_ROUTES["monInstall"]
+					data["calamari"] = true
+				} else if util.StringInSlice(OSD, node.NodeType) {
+					route = CEPH_INSTALLER_API_ROUTES["osdInstall"]
+				}
+
+				data["hosts"] = hosts
+				data["redhat_storage"] = conf.SystemConfig.Provisioners[providerName].RedhatStorage
+
+				reqData, err := formConfigureData(data)
+				if err != nil {
+					failedNodes = append(failedNodes, node)
+					return
+				}
+
+				resp, body, errs := httprequest.Post(formUrl(route)).Send(reqData).End()
+
+				respData, err := parseInstallResponseData(ctxt, resp, body, errs)
+				if err != nil {
+					syncMutex.Lock()
+					defer syncMutex.Unlock()
+					failedNodes = append(failedNodes, node)
+					return
+				}
+				logger.Get().Info(
+					"%s-Started installation on node :%s. TaskId: %s. Request Data: %v. Route: %s",
+					ctxt,
+					hostname,
+					respData.Identifier,
+					data,
+					formUrl(route))
+				if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
+					syncMutex.Lock()
+					defer syncMutex.Unlock()
+					failedNodes = append(failedNodes, node)
+					return
+				}
+				t.UpdateStatus("Installed packages on: %s", hostname)
+			}(node, db_nodes[node.NodeId].Hostname)
+		}
+		wg.Wait()
+	*/
 
 	for _, node := range nodes {
-		wg.Add(1)
-		go func(node models.ClusterNode, hostname string) {
-			defer wg.Done()
-			var route models.ApiRoute
-			hosts := []string{hostname}
-			data := make(map[string]interface{})
-			if util.StringInSlice(MON, node.NodeType) {
-				route = CEPH_INSTALLER_API_ROUTES["monInstall"]
-				data["calamari"] = true
-			} else if util.StringInSlice(OSD, node.NodeType) {
-				route = CEPH_INSTALLER_API_ROUTES["osdInstall"]
-			}
-
-			data["hosts"] = hosts
-			data["redhat_storage"] = conf.SystemConfig.Provisioners[providerName].RedhatStorage
-
-			reqData, err := formConfigureData(data)
-			if err != nil {
-				failedNodes = append(failedNodes, node)
-				return
-			}
-
-			resp, body, errs := httprequest.Post(formUrl(route)).Send(reqData).End()
-
-			respData, err := parseInstallResponseData(ctxt, resp, body, errs)
-			if err != nil {
-				syncMutex.Lock()
-				defer syncMutex.Unlock()
-				failedNodes = append(failedNodes, node)
-				return
-			}
-			logger.Get().Info(
-				"%s-Started installation on node :%s. TaskId: %s. Request Data: %v. Route: %s",
-				ctxt,
-				hostname,
-				respData.Identifier,
-				data,
-				formUrl(route))
-			if ok := syncRequestStatus(ctxt, respData.Identifier); !ok {
-				syncMutex.Lock()
-				defer syncMutex.Unlock()
-				failedNodes = append(failedNodes, node)
-				return
-			}
-			t.UpdateStatus("Installed packages on: %s", hostname)
-		}(node, db_nodes[node.NodeId].Hostname)
+		if ok := installNode(node, db_nodes[node.NodeId].Hostname, providerName, ctxt); !ok {
+			t.UpdateStatus("Package installation failed on: %s", db_nodes[node.NodeId].Hostname)
+			failedNodes = append(failedNodes, node)
+		} else {
+			t.UpdateStatus("Installed packages on: %s", db_nodes[node.NodeId].Hostname)
+		}
 	}
-	wg.Wait()
-
 	return failedNodes
 }
+
 func (c CephInstaller) Configure(ctxt string, t *task.Task, reqType string, data map[string]interface{}) error {
 	var (
 		resp  *http.Response
@@ -185,8 +238,7 @@ func formUrl(route models.ApiRoute) string {
 
 func syncRequestStatus(ctxt string, taskId string) bool {
 	var status bool
-
-	for {
+	for i := 0; i < 90; i++ {
 		time.Sleep(10 * time.Second)
 		taskData, err := getTaskData(ctxt, taskId)
 		if err != nil {
@@ -203,7 +255,7 @@ func syncRequestStatus(ctxt string, taskId string) bool {
 			break
 		}
 	}
-
+	logger.Get().Error("%s-Call to ceph installer has timed out. Exiting the task", ctxt)
 	return status
 }
 
