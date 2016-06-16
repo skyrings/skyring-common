@@ -144,12 +144,14 @@ type System struct {
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
 	Utilizations              map[string]interface{}            `json:"utilizations"`
+	UpdatedAt                 string                            `json:"updatedat"`
 }
 
 type Utilization struct {
 	Used        int64   `json:"used"`
 	Total       int64   `json:"total"`
 	PercentUsed float64 `json:"percentused"`
+	UpdatedAt   string  `json:"updatedat"`
 }
 
 type MonitoringState struct {

@@ -62,6 +62,7 @@ type ClusterSummary struct {
 	NodesCount                map[string]int                    `json:"nodescount"`
 	ProviderMonitoringDetails map[string]map[string]interface{} `json:"providermonitoringdetails"`
 	Utilizations              map[string]interface{}            `json:"utilizations"`
+	UpdatedAt                 string                            `json:"updatedat"`
 }
 
 type StorageUsage struct {
