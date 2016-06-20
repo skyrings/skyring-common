@@ -250,9 +250,9 @@ func syncRequestStatus(ctxt string, taskId string) bool {
 			if taskData.Succeeded {
 				status = true
 			} else {
-				logger.Get().Error("%s-Error while installing Packages. stdout: %v. stderr:%v", ctxt, taskData.Stdout, taskData.Stderr)
+				logger.Get().Error("%s-Error while installing-packages/configuring-nodes. stdout: %v. stderr:%v", ctxt, taskData.Stdout, taskData.Stderr)
 			}
-			break
+			return status
 		}
 	}
 	logger.Get().Error("%s-Call to ceph installer has timed out. Exiting the task", ctxt)
