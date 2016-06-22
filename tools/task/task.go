@@ -89,6 +89,9 @@ func (t *Task) Done(status models.TaskStatus) {
 	t.Completed = true
 	t.LastUpdated = time.Now()
 	t.UpdateTaskCompleted(t.Completed, status, t.LastUpdated)
+	if t.CompletedCbkFunc != nil {
+		go t.CompletedCbkFunc(t)
+	}
 	//Remove task details from Manager
 	GetTaskManager().RemoveTask(t.ID)
 }
