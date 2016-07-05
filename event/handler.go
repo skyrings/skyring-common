@@ -19,9 +19,43 @@ import (
 	"github.com/skyrings/skyring-common/db"
 	"github.com/skyrings/skyring-common/models"
 	"github.com/skyrings/skyring-common/tools/logger"
+	"github.com/skyrings/skyring-common/tools/uuid"
 	"gopkg.in/mgo.v2/bson"
 	"time"
 )
+
+var (
+	ClusterAffectingEntities = []models.NotificationEntity{
+		models.NOTIFICATION_ENTITY_HOST,
+		models.NOTIFICATION_ENTITY_CLUSTER,
+		models.NOTIFICATION_ENTITY_SLU,
+		models.NOTIFICATION_ENTITY_STORAGE,
+		models.NOTIFICATION_ENTITY_BLOCK_DEVICE,
+		models.NOTIFICATION_ENTITY_STORAGE_PROFILE,
+	}
+	HostAffectingEntities = []models.NotificationEntity{
+		models.NOTIFICATION_ENTITY_HOST,
+		models.NOTIFICATION_ENTITY_SLU,
+	}
+	SluAffectingEntities = []models.NotificationEntity{
+		models.NOTIFICATION_ENTITY_SLU,
+	}
+	StorageAffectingEntities = []models.NotificationEntity{
+		models.NOTIFICATION_ENTITY_STORAGE,
+	}
+	BlockDeviceAffectingEntities = []models.NotificationEntity{
+		models.NOTIFICATION_ENTITY_BLOCK_DEVICE,
+	}
+)
+
+func presentInList(entities []models.NotificationEntity, entity models.NotificationEntity) bool {
+	for _, e := range entities {
+		if entity == e {
+			return true
+		}
+	}
+	return false
+}
 
 func Persist_event(event models.Event, ctxt string) error {
 	sessionCopy := db.GetDatastore().Copy()
@@ -44,6 +78,7 @@ func ClearCorrespondingAlert(event models.AppEvent, ctxt string) (models.AlarmSt
 		if err := coll.Find(bson.M{
 			"name":      event.Name,
 			"entityid":  event.EntityId,
+			"acked":     false,
 			"clusterid": event.ClusterId}).Sort("-timestamp").All(&events); err != nil {
 			logger.Get().Error("%s-Error getting record from DB: %v", ctxt, err)
 			return models.ALARM_STATUS_INDETERMINATE, err
@@ -234,6 +269,73 @@ func UpdateBlockDeviceAlarmCount(event models.AppEvent, clearedSeverity models.A
 		bson.M{"$set": BlkDev}); err != nil {
 		logger.Get().Error("%s-Error Updating the Alarm state/count: %v", ctxt, err)
 		return err
+	}
+	return nil
+}
+
+func UpdateAlarmCount(event models.AppEvent, severity models.AlarmStatus, ctxt string) error {
+	if presentInList(ClusterAffectingEntities, event.NotificationEntity) {
+		if err := UpdateClusterAlarmCount(event, severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count for Cluster, for alert: %v. Error: %v", ctxt, event.EventId, err)
+		}
+	}
+	if presentInList(HostAffectingEntities, event.NotificationEntity) {
+		if err := UpdateNodeAlarmCount(event, severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count for node, for alert: %v. Error: %v", ctxt, event.EventId, err)
+		}
+	}
+	if presentInList(SluAffectingEntities, event.NotificationEntity) {
+		if err := UpdateSluAlarmCount(event, severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count for Slu, for alert: %v. Error: %v", ctxt, event.EventId, err)
+		}
+	}
+	if presentInList(StorageAffectingEntities, event.NotificationEntity) {
+		if err := UpdateStorageAlarmCount(event, severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count for storage, for alert: %v. Error: %v", ctxt, event.EventId, err)
+		}
+	}
+	if presentInList(BlockDeviceAffectingEntities, event.NotificationEntity) {
+		if err := UpdateBlockDeviceAlarmCount(event, severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count for Block Device, for alert: %v. Error: %v", ctxt, event.EventId, err)
+		}
+	}
+	return nil
+}
+
+func DismissAllEventsForEntity(uuid uuid.UUID, event models.AppEvent, ctxt string) error {
+	var events []models.AppEvent
+	sessionCopy := db.GetDatastore().Copy()
+	defer sessionCopy.Close()
+	coll := sessionCopy.DB(conf.SystemConfig.DBConfig.Database).C(models.COLL_NAME_APP_EVENTS)
+	ackedComment := fmt.Sprintf("Detected deletion of this entity. Hence this event is marked as dismissed")
+	if err := coll.Find(bson.M{
+		"entityid": event.EntityId,
+		"acked":    false,
+		"$or": []interface{}{
+			bson.M{"severity": models.ALARM_STATUS_MAJOR},
+			bson.M{"severity": models.ALARM_STATUS_MINOR},
+			bson.M{"severity": models.ALARM_STATUS_WARNING},
+			bson.M{"severity": models.ALARM_STATUS_CRITICAL},
+			bson.M{"severity": models.ALARM_STATUS_INDETERMINATE},
+		}}).All(&events); err != nil {
+		logger.Get().Error("%s-Error Getting the events from DB. Error: %v", ctxt, err)
+		return err
+	}
+	for _, e := range events {
+		if err := coll.Update(bson.M{
+			"eventid": e.EventId},
+			bson.M{"$set": bson.M{"acked": true,
+				"systemackedtime":  time.Now(),
+				"systemackcomment": ackedComment,
+				"ackedbyevent":     event.EventId.String(),
+			}}); err != nil {
+			logger.Get().Error("%s-Error updating the events. Error: %v", ctxt, err)
+			return err
+		}
+		if err := UpdateAlarmCount(e, e.Severity, ctxt); err != nil {
+			logger.Get().Error("%s-Could not update Alarm count after clearing event: %v. Error: %v", ctxt, e.EventId, err)
+			return err
+		}
 	}
 	return nil
 }
