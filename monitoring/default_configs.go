@@ -3,32 +3,36 @@ package monitoring
 func GetDefaultThresholdValues() (plugins []Plugin) {
 	return []Plugin{
 		{
-			Name:   "df",
-			Enable: true,
+			Name:        "df",
+			Description: "Mount Point Utilization",
+			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "90"},
 				{Category: THRESHOLD, Type: WARNING, Value: "80"},
 			},
 		},
 		{
-			Name:   "memory",
-			Enable: true,
+			Name:        "memory",
+			Description: "Memory",
+			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "90"},
 				{Category: THRESHOLD, Type: WARNING, Value: "80"},
 			},
 		},
 		{
-			Name:   "cpu",
-			Enable: true,
+			Name:        "cpu",
+			Description: "CPU",
+			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "90"},
 				{Category: THRESHOLD, Type: WARNING, Value: "80"},
 			},
 		},
 		{
-			Name:   "swap",
-			Enable: true,
+			Name:        "swap",
+			Description: "Swap",
+			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "70"},
 				{Category: THRESHOLD, Type: WARNING, Value: "50"},
@@ -40,8 +44,9 @@ func GetDefaultThresholdValues() (plugins []Plugin) {
 func GetSystemDefaultThresholdValues() map[string]Plugin {
 	return map[string]Plugin{
 		STORAGE_PROFILE_UTILIZATION: {
-			Name:   STORAGE_PROFILE_UTILIZATION,
-			Enable: true,
+			Name:        STORAGE_PROFILE_UTILIZATION,
+			Description: "Storage Profile",
+			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "85"},
 				{Category: THRESHOLD, Type: WARNING, Value: "65"},

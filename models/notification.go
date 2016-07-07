@@ -1,14 +1,5 @@
 package models
 
-var NOTIFICATIONS_UNSUPPORTED = []string{
-	QUORUM_LOSS,
-}
-
-var NOTIFICATIONS_SUPPORTED = []string{
-	CLUSTER_AVAILABILITY,
-	HOST_AVAILABILITY,
-}
-
 const (
 	CLUSTER_AVAILABILITY = "cluster_availability"
 	QUORUM_LOSS          = "quorum_loss"
@@ -16,6 +7,25 @@ const (
 )
 
 type NotificationSubscription struct {
-	Name    string `json:"name"`
-	Enabled bool   `json:"enabled"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+}
+
+var Notifications = []NotificationSubscription{
+	{
+		Name:        CLUSTER_AVAILABILITY,
+		Description: "Cluster Availability",
+		Enabled:     true,
+	},
+	{
+		Name:        HOST_AVAILABILITY,
+		Description: "Host Availability",
+		Enabled:     true,
+	},
+	{
+		Name:        QUORUM_LOSS,
+		Description: "Quorum Loss",
+		Enabled:     false,
+	},
 }

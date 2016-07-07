@@ -6,9 +6,10 @@ import (
 )
 
 type Plugin struct {
-	Name    string         `json:"name"`
-	Enable  bool           `json:"enable"`
-	Configs []PluginConfig `json:"configs"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Enable      bool           `json:"enable"`
+	Configs     []PluginConfig `json:"configs"`
 }
 
 type PluginConfig struct {
