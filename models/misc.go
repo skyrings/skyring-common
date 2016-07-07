@@ -390,7 +390,7 @@ func (d DiskType) String() string { return DiskTypes[d] }
 const (
 	DefaultProfile1 = "sas"
 	DefaultProfile2 = "ssd"
-	DefaultProfile3 = "general"
+	DefaultProfile3 = "default"
 	DefaultPriority = 100
 )
 
