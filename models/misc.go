@@ -51,6 +51,7 @@ type ImportClusterRequest struct {
 
 type ClusterSummary struct {
 	ClusterId                 uuid.UUID                         `json:"clusterid"`
+	Type                      string                            `json:"type"`
 	Name                      string                            `json:"name"`
 	MostUsedStorages          []StorageUsage                    `json:"storageusage"`
 	Usage                     Utilization                       `json:"usage"`
@@ -265,6 +266,7 @@ const (
 	LDAP_USERS_PER_PAGE = 100
 	EVENTS_PER_PAGE     = 100
 
+	CriticalAlerts             = "criticalAlerts"
 	STORAGE_TYPE_REPLICATED    = "replicated"
 	STORAGE_TYPE_ERASURE_CODED = "erasure_coded"
 	Monitor                    = "monitor"
