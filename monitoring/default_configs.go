@@ -4,7 +4,7 @@ func GetDefaultThresholdValues() (plugins []Plugin) {
 	return []Plugin{
 		{
 			Name:        "df",
-			Description: "Mount Point Utilization",
+			Description: "Mount Point",
 			Enable:      true,
 			Configs: []PluginConfig{
 				{Category: THRESHOLD, Type: CRITICAL, Value: "90"},
