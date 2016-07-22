@@ -142,7 +142,7 @@ func ComputeSluStatusWiseCount(sluSelectCriteria bson.M, sluThresholdSelectCrite
 
 func ComputeClustersStatusWiseCounts() (map[string]int, error) {
 	var err_str string
-	var clusters_in_error int
+	var clusters_in_error, clusters_in_warn int
 	clusterCriticalAlertCount := 0
 	nearFullClusters := 0
 	clusters, err := GetClusters(nil)
@@ -161,6 +161,8 @@ func ComputeClustersStatusWiseCounts() (map[string]int, error) {
 	for _, cluster := range clusters {
 		if cluster.Status == models.CLUSTER_STATUS_ERROR {
 			clusters_in_error = clusters_in_error + 1
+		} else if cluster.Status == models.CLUSTER_STATUS_WARN {
+			clusters_in_warn = clusters_in_warn + 1
 		}
 		clusterCriticalAlertCount = clusterCriticalAlertCount + cluster.AlmCritCount
 		for _, tEvent := range clusterThresholdEvenstInDb {
@@ -174,7 +176,7 @@ func ComputeClustersStatusWiseCounts() (map[string]int, error) {
 	} else {
 		err = fmt.Errorf("%s", err_str)
 	}
-	return map[string]int{models.TOTAL: len(clusters), models.ClusterStatuses[models.CLUSTER_STATUS_ERROR]: clusters_in_error, models.NEAR_FULL: nearFullClusters, models.CriticalAlerts: clusterCriticalAlertCount}, err
+	return map[string]int{models.TOTAL: len(clusters), models.ClusterStatuses[models.CLUSTER_STATUS_ERROR]: clusters_in_error, models.ClusterStatuses[models.CLUSTER_STATUS_WARN]: clusters_in_warn, models.NEAR_FULL: nearFullClusters, models.CriticalAlerts: clusterCriticalAlertCount}, err
 }
 
 func fetchThresholdEvents(selectCriteria bson.M, utilizationType string) ([]models.ThresholdEvent, error) {
