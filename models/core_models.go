@@ -59,7 +59,7 @@ type Disk struct {
 	MountPoint     []string  `bson:"mountpoint",json:"mountpoint"`
 	Name           string    `bson:"name",json:"name"`
 	Parent         string    `bson:"parent",json:"parent"`
-	Size           uint64    `bson:"size",json:"size"`
+	Size           float64   `bson:"size",json:"size"`
 	Type           string    `bson:"type",json:"type"`
 	Used           bool      `bson:"used",json:"used"`
 	SSD            bool      `bson:"ssd",json:"ssd"`
@@ -172,7 +172,7 @@ type StorageLogicalUnit struct {
 	NodeId            uuid.UUID              `json:"nodeid"`
 	StorageIds        []uuid.UUID            `json:"storageid"`
 	StorageDeviceId   uuid.UUID              `json:"storagedeviceid"`
-	StorageDeviceSize uint64                 `json:"storagedevicesize"`
+	StorageDeviceSize float64                `json:"storagedevicesize"`
 	Status            SluStatus              `json:"status"`
 	Options           map[string]interface{} `json:"options"`
 	StorageProfile    string                 `json:"storageprofile"`

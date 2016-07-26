@@ -81,7 +81,7 @@ type DiskHierarchyRequest struct {
 type DiskHierarchyDetails struct {
 	ClusterName string                       `json:"clustername"`
 	Hierarchy   map[string]map[string]string `json:"hierarchy"`
-	StorageSize uint64                       `json:"storagesize"`
+	StorageSize float64                      `json:"storagesize"`
 }
 
 type ClusterNode struct {
