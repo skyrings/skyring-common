@@ -56,7 +56,7 @@ func (manager *Manager) Run(owner string, name string, f func(t *Task), startedF
 			case <-task.DoneCh:
 				return
 			case <-task.StopCh:
-				task.UpdateStatus("Force Stop. Task: %v explicitly stopped.", task.ID)
+				task.UpdateStatus("Force Stop. Task: %v explicitly stopped due to timeout.", task.ID)
 				task.Done(models.TASK_STATUS_TIMED_OUT)
 				task.StopCh <- true
 				return
