@@ -446,3 +446,13 @@ func AppendServiceToNode(selectCriteria bson.M, serviceName string, status strin
 		logger.Get().Error("%s-Error updating the service %v of status %v for node with criterion %v. error: %v", ctxt, serviceName, status, selectCriteria, err)
 	}
 }
+
+func StringIndexInSlice(arr []string, str string) int {
+	index := -1
+	for index, element := range arr {
+		if element == str {
+			return index
+		}
+	}
+	return index
+}
