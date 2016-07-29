@@ -88,7 +88,7 @@ func formatDate(inDate string) (string, error) {
 		}
 	}
 	if matched, _ := regexp.Match("^-([0-5]?[0-9])?s$|^-([0-5]?[0-9])?min$|^-([0-2]?[0-3])?h$|^-([0-9])*d$|^-([0-9])*w$|^-([0-9])*mon$|^-([0-9])*y$", []byte(inDate)); !matched {
-		return "", fmt.Errorf("Unsupported type")
+		return "", fmt.Errorf("The date %v is of unsupported type", inDate)
 	}
 	return inDate, nil
 }
@@ -193,7 +193,7 @@ func ValidateRequest(params map[string]interface{}) error {
 					b. Else receive the error and propogate it.
 			4. Return results
 		*/
-		return fmt.Errorf("Unsupported Resource")
+		return fmt.Errorf("%v is an unsupported Resource", resource)
 	}
 	return nil
 }
@@ -239,7 +239,7 @@ func GetRequestPath(params map[string]interface{}) (string, error) {
 		} else if params["start_time"] != "" && params["end_time"] == "" {
 			templ = templateUntilTime
 		} else {
-			return "", fmt.Errorf("Not supported")
+			return "", fmt.Errorf("Unsupported combination of start time %v and end time %v", params["start_time"], params["end_time"])
 		}
 		urlTime, urlTimeError := GetValidatedGraphiteSupportedTime(timeString, templ)
 		if urlTimeError != nil {
@@ -318,7 +318,7 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 			for metricIndex, metric := range metrics {
 				target := metric.Target
 				if !strings.Contains(target, "Current:") {
-					return nil, fmt.Errorf("Current non-nil value is not available")
+					return nil, fmt.Errorf("Current non-nil value is not available for %v of %v and the target available from time series db is %v", params["resource"], params["nodename"], target)
 				}
 				targetContents := strings.Fields(target)
 				index := -1
@@ -329,12 +329,15 @@ func (tsdbm GraphiteManager) QueryDB(params map[string]interface{}) (interface{}
 					}
 				}
 				if index == -1 {
-					return nil, fmt.Errorf("Current non-nil value is not available")
+					return nil, fmt.Errorf("Current non-nil value is not available for %v of %v and the target available from time series db is %v", params["resource"], params["nodename"], target)
 				}
 
 				statValues := strings.Split(targetContents[index], ":")
+				if len(statValues[index]) == 0 {
+					statValues = []string{"Current", targetContents[index+1]}
+				}
 				if len(statValues) != 2 {
-					return nil, fmt.Errorf("Current non-nil value is not available")
+					return nil, fmt.Errorf("Current non-nil value is not available for %v of %v and the target available from time series db is %v", params["resource"], params["nodename"], target)
 				}
 				var statVar []interface{}
 				statVar = append(statVar, statValues[1])
@@ -389,7 +392,7 @@ func (tsdbm GraphiteManager) GetInstantValue(node string, resource_name string) 
 	}
 	fVal, fValErr := strconv.ParseFloat(value, 64)
 	if fValErr != nil {
-		return 0.0, fmt.Errorf("The value %v is not a number.Err %v", fVal, fValErr)
+		return 0.0, fmt.Errorf("Failed to get instant stat of %v resource of %v. The value %v is not a number.Err %v", resource_name, node, value, fValErr)
 	}
 	if math.IsNaN(fVal) {
 		return 0.0, fmt.Errorf("The value %v from resource %v of %v is not a number", fVal, resource_name, node)
@@ -424,21 +427,21 @@ func (tsdbm GraphiteManager) GetInstantValuesAggregation(node string, resource_n
 			statistics := []stat(metric.Stats)
 			timeStampValueArr := []interface{}(statistics[0])
 			if !ok {
-				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v from %v of %v\n", resource_name, metric.Target, node)
 				// Decrement metric_cnt for average as the current node is not contributing.
 				metric_cnt = metric_cnt - 1
 				continue
 			}
 			value, ok := timeStampValueArr[0].(string)
 			if !ok {
-				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v from %v of %v\n", resource_name, metric.Target, node)
 				// Decrement metric_cnt for average as the current node is not contributing.
 				metric_cnt = metric_cnt - 1
 				continue
 			}
 			val, err := strconv.ParseFloat(value, 64)
 			if err != nil {
-				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v resource of %v\n", metric.Target, node)
+				err_str = err_str + fmt.Sprintf("Failed to get the instant stat of %v from %v of %v\n", resource_name, metric.Target, node)
 				// Decrement metric_cnt for average as the current node is not contributing.
 				metric_cnt = metric_cnt - 1
 				continue
