@@ -45,6 +45,7 @@ const (
 	MEMORY                      = "memory"
 	SWAP                        = "swap"
 	CPU_USER                    = "cpu-user"
+	CPU_SYSTEM                  = "cpu-system"
 	USED                        = "used"
 	TOTAL                       = "total"
 	FREE                        = "free"

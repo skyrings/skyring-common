@@ -104,8 +104,9 @@ func GetTemplateParsedString(urlParams map[string]interface{}, templateString st
 }
 
 var resourceCollectionNameMapper = map[string]string{
-	monitoring.NETWORK_LATENCY: "ping.ping-{{.serverName}}",
-	monitoring.CPU_USER:        "cpu.percent-user",
+	monitoring.NETWORK_LATENCY:                                                        "ping.ping-{{.serverName}}",
+	monitoring.CPU_USER:                                                               "cpu.percent-user",
+	monitoring.CPU_SYSTEM:                                                             "cpu.percent-system",
 	monitoring.AGGREGATION + monitoring.INTERFACE + monitoring.OCTETS + monitoring.RX: "interface*.if_octets.rx",
 	monitoring.AGGREGATION + monitoring.INTERFACE + monitoring.OCTETS + monitoring.TX: "interface*.if_octets.tx",
 	monitoring.AGGREGATION + monitoring.DISK + monitoring.READ:                        "disk-*.disk_ops.read",
