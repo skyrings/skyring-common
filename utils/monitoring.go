@@ -115,8 +115,10 @@ func ComputeSluStatusWiseCount(sluSelectCriteria bson.M, sluThresholdSelectCrite
 	if err != nil && err != mgo.ErrNotFound {
 		err_str = fmt.Sprintf("%s", err.Error())
 	}
-	slu_down_cnt := 0
 	slu_error_cnt := 0
+	slu_warning_count := 0
+	slu_unknown_count := 0
+	slu_ok_count := 0
 	sluThresholdEventsInDb, err := fetchThresholdEvents(sluThresholdSelectCriteria, monitoring.SLU_UTILIZATION)
 	if err != nil && err != mgo.ErrNotFound {
 		err_str = fmt.Sprintf("%s.%s", err_str, err.Error())
@@ -128,8 +130,14 @@ func ComputeSluStatusWiseCount(sluSelectCriteria bson.M, sluThresholdSelectCrite
 		if slu.Status == models.SLU_STATUS_ERROR {
 			slu_error_cnt = slu_error_cnt + 1
 		}
-		if slu.State == models.SLU_STATE_DOWN {
-			slu_down_cnt = slu_down_cnt + 1
+		if slu.Status == models.SLU_STATUS_WARN {
+			slu_warning_count = slu_warning_count + 1
+		}
+		if slu.Status == models.SLU_STATUS_OK {
+			slu_ok_count = slu_ok_count + 1
+		}
+		if slu.Status == models.SLU_STATUS_UNKNOWN {
+			slu_unknown_count = slu_unknown_count + 1
 		}
 	}
 	if err_str == "" {
@@ -137,7 +145,7 @@ func ComputeSluStatusWiseCount(sluSelectCriteria bson.M, sluThresholdSelectCrite
 	} else {
 		err = fmt.Errorf("%s", err_str)
 	}
-	return map[string]int{models.TOTAL: len(slus), models.SluStatuses[models.SLU_STATUS_ERROR]: slu_error_cnt, models.STATUS_DOWN: slu_down_cnt, models.NEAR_FULL: len(sluThresholdEventsInDb), models.CriticalAlerts: sluCriticalAlertCount}, err
+	return map[string]int{models.TOTAL: len(slus), models.SluStatuses[models.SLU_STATUS_UNKNOWN]: slu_unknown_count, models.SluStatuses[models.SLU_STATUS_WARN]: slu_warning_count, models.SluStatuses[models.SLU_STATUS_ERROR]: slu_error_cnt, models.SluStatuses[models.SLU_STATUS_OK]: slu_ok_count, models.NEAR_FULL: len(sluThresholdEventsInDb), models.CriticalAlerts: sluCriticalAlertCount}, err
 }
 
 func ComputeClustersStatusWiseCounts() (map[string]int, error) {
