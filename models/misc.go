@@ -279,7 +279,7 @@ const (
 	DownSLU                    = "DownSLU"
 	SLU_STATE_DOWN             = "Out"
 
-	SKYRING_ENC_KEY_FILE       = "/var/run/.skyring_enc_key"
+	SKYRING_ENC_KEY_FILE = "/var/run/.skyring_enc_key"
 )
 
 type Clusters []Cluster
